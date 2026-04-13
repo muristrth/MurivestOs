@@ -5,11 +5,14 @@ import { z } from "zod/v4";
 import {
   activityTable,
   appRolesTable,
+  approvalsTable,
+  campaignsTable,
   companiesTable,
   contactsTable,
   dealsTable,
   departmentsTable,
   documentsTable,
+  expensesTable,
   financeRecordsTable,
   insertContactSchema,
   insertDealSchema,
@@ -19,7 +22,11 @@ import {
   insertOperatingRecordSchema,
   insertPropertySchema,
   insertTaskSchema,
+  investorsTable,
+  invoicesTable,
   legalMattersTable,
+  mandatesTable,
+  meetingsTable,
   notificationsTable,
   operatingRecordsTable,
   propertiesTable,
@@ -35,6 +42,20 @@ const CURRENCY_CODE = "KES";
 const today = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
 const id = (prefix: string) => `${prefix}_${crypto.randomUUID().slice(0, 8)}`;
+
+// Database availability check middleware
+const requireDb: RequestHandler = (_req, res, next) => {
+  if (!db) {
+    res.status(503).json({
+      error: "Database not configured",
+      message:
+        "DATABASE_URL environment variable is not set. Please add a Supabase integration to enable database operations.",
+      status: "database_unavailable",
+    });
+    return;
+  }
+  next();
+};
 
 const moduleEnum = z.enum([
   "daily-log",
@@ -132,7 +153,7 @@ async function getUserContext(req: Parameters<RequestHandler>[0]) {
   let dbIsActive = true;
   let dbCanLogin = true;
 
-  if (auth.userId) {
+  if (auth.userId && db) {
     const [dbUser] = await db
       .select({
         roleSlug: usersTable.roleSlug,
@@ -181,34 +202,36 @@ const requireAuth: RequestHandler = async (req, res, next) => {
     return;
   }
 
-  // Upsert user (create or update)
-  await db
-    .insert(usersTable)
-    .values({
-      id: `user_${context.userId}`,
-      clerkUserId: context.userId,
-      email: context.email,
-      firstName: context.name.split(" ")[0],
-      lastName: context.name.split(" ").slice(1).join(" "),
-      fullName: context.name,
-      roleSlug: context.role,
-      isApproved: context.isApproved,
-      canLogin: context.canLogin,
-      isActive: context.isActive,
-      userType: "internal",
-      lastLoginAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: usersTable.clerkUserId,
-      set: {
+  // Upsert user (create or update) - only if db is available
+  if (db) {
+    await db
+      .insert(usersTable)
+      .values({
+        id: `user_${context.userId}`,
+        clerkUserId: context.userId,
         email: context.email,
         firstName: context.name.split(" ")[0],
         lastName: context.name.split(" ").slice(1).join(" "),
         fullName: context.name,
         roleSlug: context.role,
+        isApproved: context.isApproved,
+        canLogin: context.canLogin,
+        isActive: context.isActive,
+        userType: "internal",
         lastLoginAt: new Date(),
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: usersTable.clerkUserId,
+        set: {
+          email: context.email,
+          firstName: context.name.split(" ")[0],
+          lastName: context.name.split(" ").slice(1).join(" "),
+          fullName: context.name,
+          roleSlug: context.role,
+          lastLoginAt: new Date(),
+        },
+      });
+  }
 
   // Re-fetch to get current approval status
   const updatedContext = await getUserContext(req);
@@ -302,6 +325,7 @@ async function recordActivity(
   module: string,
   impact: string,
 ) {
+  if (!db) return; // Skip if DB not available
   await db.insert(activityTable).values({
     id: id("activity"),
     timestamp: now(),
@@ -330,6 +354,7 @@ async function sendNotification(
     status = response.ok ? "sent" : "provider_error";
     providerResponse = await response.text();
   }
+  if (!db) return null; // Skip DB insert if not available
   const [notification] = await db
     .insert(notificationsTable)
     .values({
@@ -347,6 +372,8 @@ async function sendNotification(
 }
 
 async function ensureSeeded() {
+  if (!db) return; // Skip seeding if DB not available
+  
   const existingContacts = await db
     .select({ count: sql<number>`count(*)` })
     .from(contactsTable);
@@ -355,43 +382,54 @@ async function ensureSeeded() {
     await db.insert(contactsTable).values([
       {
         id: "contact_001",
+        firstName: "Amina",
+        lastName: "Okonkwo",
+        fullName: "Amina Okonkwo",
         name: "Amina Okonkwo",
         category: "investor",
-        company: "Okonkwo Family Office",
+        contactType: "investor",
         email: "amina@okonkwofo.com",
         phone: "+254 701 555 0140",
         relationshipOwner: "Investor Relations",
         status: "active",
-        capitalPreference:
-          "Ksh 200M - Ksh 800M, income-yielding retail and mixed-use",
         accessTier: "investor_portal",
         lastInteraction: "2026-04-09",
+        country: "Kenya",
+        city: "Nairobi",
       },
       {
         id: "contact_002",
+        firstName: "Kofi",
+        lastName: "Mensah",
+        fullName: "Kofi Mensah",
         name: "Kofi Mensah",
         category: "landlord",
-        company: "Mensah Holdings",
+        contactType: "landlord",
         email: "kofi@mensahholdings.com",
         phone: "+254 302 555 201",
         relationshipOwner: "Property Acquisition",
         status: "onboarding",
-        capitalPreference: "Mandate conversion and asset disposition",
         accessTier: "landlord_portal",
         lastInteraction: "2026-04-08",
+        country: "Kenya",
+        city: "Nairobi",
       },
       {
         id: "contact_003",
+        firstName: "Grace",
+        lastName: "Ndlovu",
+        fullName: "Grace Ndlovu",
         name: "Grace Ndlovu",
         category: "tenant",
-        company: "Ndlovu Logistics",
+        contactType: "tenant",
         email: "grace@ndlvrlogistics.com",
         phone: "+254 11 555 7281",
         relationshipOwner: "Operations",
         status: "active",
-        capitalPreference: "Lease renewal and service support",
         accessTier: "tenant_portal",
         lastInteraction: "2026-04-10",
+        country: "Kenya",
+        city: "Nairobi",
       },
     ]);
 
@@ -399,40 +437,67 @@ async function ensureSeeded() {
       {
         id: "property_001",
         name: "Victoria Island Grade A Office",
+        title: "Victoria Island Grade A Office",
         location: "Lagos, Nigeria",
-        assetClass: "Office",
+        locationText: "Victoria Island, Lagos",
+        propertyType: "office",
+        propertyClass: "Grade A",
+        country: "Nigeria",
+        city: "Lagos",
         askingPrice: 14500000,
+        askingPriceKes: 14500000,
         yield: 8.2,
+        headlineYield: 8.2,
         status: "active",
         mandateType: "exclusive",
         owner: "Mensah Holdings",
         publishToWebsite: true,
+        publishToInvestorPortal: true,
+        visibilityLevel: "public",
         mandateHealth: "Exclusive mandate valid for 74 days",
       },
       {
         id: "property_002",
         name: "Airport Road Logistics Park",
+        title: "Airport Road Logistics Park",
         location: "Accra, Ghana",
-        assetClass: "Industrial",
+        locationText: "Airport Road, Accra",
+        propertyType: "industrial",
+        propertyClass: "Logistics",
+        country: "Ghana",
+        city: "Accra",
         askingPrice: 9200000,
+        askingPriceKes: 9200000,
         yield: 10.6,
+        headlineYield: 10.6,
         status: "under_offer",
         mandateType: "open",
         owner: "Asare Capital",
         publishToWebsite: false,
+        publishToInvestorPortal: false,
+        visibilityLevel: "internal",
         mandateHealth: "Offer review; internal visibility only",
       },
       {
         id: "property_003",
         name: "Sandton Mixed-Use Corner",
+        title: "Sandton Mixed-Use Corner",
         location: "Johannesburg, South Africa",
-        assetClass: "Mixed-use",
+        locationText: "Sandton, Johannesburg",
+        propertyType: "mixed_use",
+        propertyClass: "Mixed-use",
+        country: "South Africa",
+        city: "Johannesburg",
         askingPrice: 18750000,
+        askingPriceKes: 18750000,
         yield: 7.7,
+        headlineYield: 7.7,
         status: "mandate_pending",
         mandateType: "ats_pending",
         owner: "Ndlovu Trust",
         publishToWebsite: false,
+        publishToInvestorPortal: false,
+        visibilityLevel: "internal",
         mandateHealth: "ATS awaiting legal approval",
       },
     ]);
@@ -480,7 +545,10 @@ async function ensureSeeded() {
       {
         id: "task_001",
         title: "Approve ATS agreement for Sandton asset",
+        description: "Review and approve the Authority to Sell agreement for the Sandton asset",
+        taskType: "approval",
         department: "Legal & Compliance",
+        departmentCode: "legal",
         priority: "critical",
         status: "awaiting_approval",
         owner: "Executive Admin",
@@ -489,7 +557,10 @@ async function ensureSeeded() {
       {
         id: "task_002",
         title: "Refresh investor brief for Victoria Island office",
+        description: "Update the investment memorandum and investor brief",
+        taskType: "marketing",
         department: "Marketing",
+        departmentCode: "marketing",
         priority: "high",
         status: "in_progress",
         owner: "Marketing Lead",
@@ -498,7 +569,10 @@ async function ensureSeeded() {
       {
         id: "task_003",
         title: "Validate payment processor readiness",
+        description: "Ensure payment processor integration is ready for production",
+        taskType: "finance",
         department: "Finance",
+        departmentCode: "finance",
         priority: "medium",
         status: "submitted",
         owner: "Finance Ops",
@@ -932,7 +1006,7 @@ router.use(async (_req, _res, next) => {
   }
 });
 
-router.use("/murivest", requireAuth);
+router.use("/murivest", requireDb, requireAuth);
 
 router.get("/murivest/me", async (req, res) => {
   const context = (
@@ -1998,18 +2072,6 @@ router.get("/murivest/lookup/companies", async (_req, res) => {
   );
 });
 
-router.get("/murivest/lookup/contacts", async (_req, res) => {
-  const contacts = await db.select().from(contactsTable);
-  res.json(
-    contacts.map((c) => ({
-      value: c.fullName || c.name,
-      label: c.fullName || c.name,
-      id: c.id,
-      category: c.category,
-    })),
-  );
-});
-
 router.get("/murivest/lookup/departments", async (_req, res) => {
   res.json([
     { value: "Executive", label: "Executive" },
@@ -2161,6 +2223,598 @@ router.get(
     const users = await db.select().from(usersTable);
     res.json(users);
   },
+);
+
+// Invoices CRUD
+router.get(
+  "/murivest/invoices",
+  requireRole(["finance", "internal_team", "super_admin"]),
+  async (_req, res) => res.json(await db.select().from(invoicesTable)),
+);
+
+router.post(
+  "/murivest/invoices",
+  requireRole(["finance", "internal_team", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(invoicesTable)
+        .values({
+          id: id("inv"),
+          invoiceNumber: input.invoiceNumber || `INV-${Date.now()}`,
+          invoiceType: input.invoiceType || "standard",
+          companyId: input.companyId || null,
+          contactId: input.contactId || null,
+          dealId: input.dealId || null,
+          propertyId: input.propertyId || null,
+          legalMatterId: input.legalMatterId || null,
+          issueDate: input.issueDate ? new Date(input.issueDate) : new Date(),
+          dueDate: input.dueDate
+            ? new Date(input.dueDate)
+            : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          subtotalKes: Number(input.subtotalKes) || 0,
+          taxKes: Number(input.taxKes) || 0,
+          totalKes:
+            Number(input.totalKes) ||
+            Number(input.subtotalKes) + Number(input.taxKes) ||
+            0,
+          paidAmountKes: Number(input.paidAmountKes) || 0,
+          status: input.status || "draft",
+          notes: input.notes || "",
+        })
+        .returning();
+      await sendNotification(
+        "Invoice Created",
+        `Invoice ${created?.invoiceNumber} has been created.`,
+        "finance",
+      );
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Invoice create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch(
+  "/murivest/invoices/:id",
+  requireRole(["finance", "internal_team", "super_admin"]),
+  async (req, res) => {
+    const [updated] = await db
+      .update(invoicesTable)
+      .set({
+        ...req.body,
+        issueDate: req.body.issueDate
+          ? new Date(req.body.issueDate)
+          : undefined,
+        dueDate: req.body.dueDate ? new Date(req.body.dueDate) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(invoicesTable.id, req.params.id))
+      .returning();
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/murivest/invoices/:id",
+  requireRole(["finance", "super_admin"]),
+  async (req, res) =>
+    res.json(
+      (
+        await db
+          .delete(invoicesTable)
+          .where(eq(invoicesTable.id, req.params.id))
+          .returning()
+      )[0],
+    ),
+);
+
+// Expenses CRUD
+router.get(
+  "/murivest/expenses",
+  requireRole(["finance", "internal_team", "super_admin"]),
+  async (_req, res) => res.json(await db.select().from(expensesTable)),
+);
+
+router.post(
+  "/murivest/expenses",
+  requireRole(["finance", "internal_team", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(expensesTable)
+        .values({
+          id: id("exp"),
+          description: input.description || "",
+          category: input.category || "other",
+          amountKes: Number(input.amountKes) || Number(input.amount) || 0,
+          departmentCode: input.departmentCode || "",
+          department: input.department || "",
+          companyId: input.companyId || null,
+          legalMatterId: input.legalMatterId || null,
+          status: input.status || "submitted",
+          expenseDate: input.expenseDate
+            ? new Date(input.expenseDate)
+            : new Date(),
+        })
+        .returning();
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Expense create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch(
+  "/murivest/expenses/:id",
+  requireRole(["finance", "internal_team", "super_admin"]),
+  async (req, res) => {
+    const [updated] = await db
+      .update(expensesTable)
+      .set({
+        ...req.body,
+        updatedAt: new Date(),
+      })
+      .where(eq(expensesTable.id, req.params.id))
+      .returning();
+    if (updated?.status === "approved") {
+      await sendNotification(
+        "Expense Approved",
+        `Expense ${updated.description} has been approved.`,
+        "finance",
+      );
+    }
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/murivest/expenses/:id",
+  requireRole(["finance", "super_admin"]),
+  async (req, res) =>
+    res.json(
+      (
+        await db
+          .delete(expensesTable)
+          .where(eq(expensesTable.id, req.params.id))
+          .returning()
+      )[0],
+    ),
+);
+
+// Meetings CRUD
+router.get("/murivest/meetings", async (_req, res) =>
+  res.json(await db.select().from(meetingsTable)),
+);
+
+router.post(
+  "/murivest/meetings",
+  requireRole(["internal_team", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(meetingsTable)
+        .values({
+          id: id("mtg"),
+          title: input.title || "",
+          meetingType: input.meetingType || "internal",
+          scheduledAt: input.scheduledAt
+            ? new Date(input.scheduledAt)
+            : new Date(),
+          durationMinutes: Number(input.durationMinutes) || 60,
+          duration: Number(input.duration) || Number(input.durationMinutes) || 60,
+          location: input.location || "",
+          owner: input.owner || "",
+          status: input.status || "scheduled",
+          attendees: input.attendees || [],
+          notes: input.notes || "",
+          actionItems: input.actionItems || [],
+        })
+        .returning();
+      await sendNotification(
+        "Meeting Scheduled",
+        `${created?.title} has been scheduled.`,
+        "meetings",
+      );
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Meeting create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch("/murivest/meetings/:id", async (req, res) => {
+  const [updated] = await db
+    .update(meetingsTable)
+    .set({
+      ...req.body,
+      scheduledAt: req.body.scheduledAt
+        ? new Date(req.body.scheduledAt)
+        : undefined,
+      updatedAt: new Date(),
+    })
+    .where(eq(meetingsTable.id, req.params.id))
+    .returning();
+  res.json(updated);
+});
+
+router.delete("/murivest/meetings/:id", async (req, res) =>
+  res.json(
+    (
+      await db
+        .delete(meetingsTable)
+        .where(eq(meetingsTable.id, req.params.id))
+        .returning()
+    )[0],
+  ),
+);
+
+// Mandates CRUD
+router.get("/murivest/mandates", async (_req, res) =>
+  res.json(await db.select().from(mandatesTable)),
+);
+
+router.post(
+  "/murivest/mandates",
+  requireRole(["internal_team", "legal", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(mandatesTable)
+        .values({
+          id: id("mnd"),
+          propertyId: input.propertyId || null,
+          landlordContactId: input.landlordContactId || null,
+          landlordCompanyId: input.landlordCompanyId || null,
+          type: input.type || "sale",
+          mandateType: input.mandateType || "exclusive",
+          status: input.status || "draft",
+          startDate: input.startDate ? new Date(input.startDate) : null,
+          expiryDate: input.expiryDate ? new Date(input.expiryDate) : null,
+          exclusivityEndDate: input.exclusivityEndDate
+            ? new Date(input.exclusivityEndDate)
+            : null,
+          askingPriceKes: Number(input.askingPriceKes) || 0,
+          valuationKes: Number(input.valuationKes) || 0,
+          feePercent: Number(input.feePercent) || 0,
+          approvedForAts: input.approvedForAts || false,
+        })
+        .returning();
+      await sendNotification(
+        "Mandate Created",
+        `New mandate has been created and requires review.`,
+        "mandates",
+      );
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Mandate create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch(
+  "/murivest/mandates/:id",
+  requireRole(["internal_team", "legal", "super_admin"]),
+  async (req, res) => {
+    const [updated] = await db
+      .update(mandatesTable)
+      .set({
+        ...req.body,
+        startDate: req.body.startDate
+          ? new Date(req.body.startDate)
+          : undefined,
+        expiryDate: req.body.expiryDate
+          ? new Date(req.body.expiryDate)
+          : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(mandatesTable.id, req.params.id))
+      .returning();
+    if (updated?.approvedForAts) {
+      await sendNotification(
+        "Mandate ATS Approved",
+        `Mandate has been approved for Authority to Sell.`,
+        "mandates",
+      );
+    }
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/murivest/mandates/:id",
+  requireRole(["legal", "super_admin"]),
+  async (req, res) =>
+    res.json(
+      (
+        await db
+          .delete(mandatesTable)
+          .where(eq(mandatesTable.id, req.params.id))
+          .returning()
+      )[0],
+    ),
+);
+
+// Campaigns CRUD
+router.get("/murivest/campaigns", async (_req, res) =>
+  res.json(await db.select().from(campaignsTable)),
+);
+
+router.post(
+  "/murivest/campaigns",
+  requireRole(["marketing", "internal_team", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(campaignsTable)
+        .values({
+          id: id("cmp"),
+          name: input.name || "",
+          campaignType: input.campaignType || "email",
+          channel: input.channel || "email",
+          status: input.status || "draft",
+          linkedPropertyId: input.linkedPropertyId || null,
+          owner: input.owner || "",
+          budgetKes: Number(input.budgetKes) || 0,
+          leadSource: input.leadSource || "",
+          leadsGenerated: 0,
+          spendKes: 0,
+          startDate: input.startDate ? new Date(input.startDate) : null,
+          endDate: input.endDate ? new Date(input.endDate) : null,
+        })
+        .returning();
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Campaign create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch(
+  "/murivest/campaigns/:id",
+  requireRole(["marketing", "internal_team", "super_admin"]),
+  async (req, res) => {
+    const [updated] = await db
+      .update(campaignsTable)
+      .set({
+        ...req.body,
+        startDate: req.body.startDate
+          ? new Date(req.body.startDate)
+          : undefined,
+        endDate: req.body.endDate ? new Date(req.body.endDate) : undefined,
+        updatedAt: new Date(),
+      })
+      .where(eq(campaignsTable.id, req.params.id))
+      .returning();
+    if (updated?.status === "launched") {
+      await sendNotification(
+        "Campaign Launched",
+        `Campaign ${updated.name} has been launched.`,
+        "marketing",
+      );
+    }
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/murivest/campaigns/:id",
+  requireRole(["marketing", "super_admin"]),
+  async (req, res) =>
+    res.json(
+      (
+        await db
+          .delete(campaignsTable)
+          .where(eq(campaignsTable.id, req.params.id))
+          .returning()
+      )[0],
+    ),
+);
+
+// Investors CRUD
+router.get(
+  "/murivest/investors",
+  requireRole(["investor_relations", "internal_team", "super_admin"]),
+  async (_req, res) => res.json(await db.select().from(investorsTable)),
+);
+
+router.post(
+  "/murivest/investors",
+  requireRole(["investor_relations", "internal_team", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(investorsTable)
+        .values({
+          id: id("inv"),
+          contactId: input.contactId || null,
+          investorType: input.investorType || "individual",
+          ticketSizeMinKes: Number(input.ticketSizeMinKes) || 0,
+          ticketSizeMaxKes: Number(input.ticketSizeMaxKes) || 0,
+          assetClassInterest: input.assetClassInterest || [],
+          geographyPreference: input.geographyPreference || [],
+          targetYield: Number(input.targetYield) || 0,
+          riskProfile: input.riskProfile || "moderate",
+          kycStatus: input.kycStatus || "pending",
+          ndaStatus: input.ndaStatus || "pending",
+        })
+        .returning();
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Investor create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch(
+  "/murivest/investors/:id",
+  requireRole(["investor_relations", "internal_team", "super_admin"]),
+  async (req, res) => {
+    const [updated] = await db
+      .update(investorsTable)
+      .set({
+        ...req.body,
+        updatedAt: new Date(),
+      })
+      .where(eq(investorsTable.id, req.params.id))
+      .returning();
+    if (updated?.kycStatus === "approved" || updated?.ndaStatus === "signed") {
+      await sendNotification(
+        "Investor Updated",
+        `Investor compliance status has been updated.`,
+        "investor_relations",
+      );
+    }
+    res.json(updated);
+  },
+);
+
+// Approvals CRUD
+router.get(
+  "/murivest/approvals",
+  requireRole(["internal_team", "super_admin"]),
+  async (_req, res) => res.json(await db.select().from(approvalsTable)),
+);
+
+router.post(
+  "/murivest/approvals",
+  requireRole(["internal_team", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(approvalsTable)
+        .values({
+          id: id("apr"),
+          entityType: input.entityType || "",
+          entityId: input.entityId,
+          approvalType: input.approvalType || "general",
+          status: input.status || "submitted",
+          notes: input.notes || "",
+        })
+        .returning();
+      await sendNotification(
+        "Approval Request",
+        `New approval request for ${created?.approvalType}.`,
+        "approvals",
+      );
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Approval create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch(
+  "/murivest/approvals/:id",
+  requireRole(["internal_team", "super_admin"]),
+  async (req, res) => {
+    const [updated] = await db
+      .update(approvalsTable)
+      .set({
+        ...req.body,
+        decidedAt: ["approved", "rejected"].includes(req.body.status)
+          ? new Date()
+          : undefined,
+      })
+      .where(eq(approvalsTable.id, req.params.id))
+      .returning();
+    if (updated?.status === "approved" || updated?.status === "rejected") {
+      await sendNotification(
+        `Approval ${updated.status === "approved" ? "Granted" : "Rejected"}`,
+        `Approval request has been ${updated.status}.`,
+        "approvals",
+      );
+    }
+    res.json(updated);
+  },
+);
+
+// Companies CRUD
+router.get("/murivest/companies", async (_req, res) =>
+  res.json(await db.select().from(companiesTable)),
+);
+
+router.post(
+  "/murivest/companies",
+  requireRole(["internal_team", "super_admin"]),
+  async (req, res) => {
+    try {
+      const input = req.body;
+      const [created] = await db
+        .insert(companiesTable)
+        .values({
+          id: id("cmp"),
+          name: input.name || "",
+          displayName: input.displayName || input.name || "",
+          type: input.type || "client",
+          registrationNumber: input.registrationNumber || "",
+          taxId: input.taxId || "",
+          country: input.country || "Kenya",
+          city: input.city || "",
+          addressLine1: input.addressLine1 || "",
+          addressLine2: input.addressLine2 || "",
+          notes: input.notes || "",
+        })
+        .returning();
+      res.status(201).json(created);
+    } catch (err) {
+      console.error("Company create error:", err);
+      res.status(400).json({ error: String(err) });
+    }
+  },
+);
+
+router.patch(
+  "/murivest/companies/:id",
+  requireRole(["internal_team", "super_admin"]),
+  async (req, res) => {
+    const [updated] = await db
+      .update(companiesTable)
+      .set({
+        ...req.body,
+        updatedAt: new Date(),
+      })
+      .where(eq(companiesTable.id, req.params.id))
+      .returning();
+    res.json(updated);
+  },
+);
+
+router.delete(
+  "/murivest/companies/:id",
+  requireRole(["super_admin"]),
+  async (req, res) =>
+    res.json(
+      (
+        await db
+          .delete(companiesTable)
+          .where(eq(companiesTable.id, req.params.id))
+          .returning()
+      )[0],
+    ),
+);
+
+// Roles and Departments lookup
+router.get("/murivest/roles", async (_req, res) =>
+  res.json(await db.select().from(appRolesTable)),
+);
+
+router.get("/murivest/departments", async (_req, res) =>
+  res.json(await db.select().from(departmentsTable)),
 );
 
 export default router;
