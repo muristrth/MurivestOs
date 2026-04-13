@@ -11,6 +11,7 @@ import {
   dealsTable,
   documentsTable,
   expensesTable,
+  expensesTable,
   financeRecordsTable,
   insertCompanySchema,
   insertContactSchema,
@@ -25,8 +26,12 @@ import {
   insertOperatingRecordSchema,
   insertPropertySchema,
   insertTaskSchema,
+  investorsTable,
+  invoicesTable,
   invoicesTable,
   legalMattersTable,
+  mandatesTable,
+  meetingsTable,
   mandatesTable,
   meetingsTable,
   notificationsTable,
@@ -54,6 +59,20 @@ const asyncHandler =
   (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
+
+// Database availability check middleware
+const requireDb: RequestHandler = (_req, res, next) => {
+  if (!db) {
+    res.status(503).json({
+      error: "Database not configured",
+      message:
+        "DATABASE_URL environment variable is not set. Please add a Supabase integration to enable database operations.",
+      status: "database_unavailable",
+    });
+    return;
+  }
+  next();
+};
 
 const moduleEnum = z.enum([
   "daily-log",
@@ -221,7 +240,7 @@ async function getUserContext(
   let dbIsActive: boolean | null = null;
   let dbCanLogin: boolean | null = null;
 
-  if (auth.userId) {
+  if (auth.userId && db) {
     const [dbUser] = await db
       .select({
         roleSlug: usersTable.roleSlug,
@@ -299,9 +318,24 @@ const requireAuth: RequestHandler = asyncHandler(async (req, res, next) => {
         lastName: context.name.split(" ").slice(1).join(" "),
         fullName: context.name,
         roleSlug: context.role,
+        isApproved: context.isApproved,
+        canLogin: context.canLogin,
+        isActive: context.isActive,
+        userType: "internal",
         lastLoginAt: new Date(),
-      },
-    });
+      })
+      .onConflictDoUpdate({
+        target: usersTable.clerkUserId,
+        set: {
+          email: context.email,
+          firstName: context.name.split(" ")[0],
+          lastName: context.name.split(" ").slice(1).join(" "),
+          fullName: context.name,
+          roleSlug: context.role,
+          lastLoginAt: new Date(),
+        },
+      });
+  }
 
   const updatedContext = await getUserContext(req);
 
@@ -392,6 +426,7 @@ async function recordActivity(
   module: string,
   impact: string,
 ) {
+  if (!db) return; // Skip if DB not available
   await db.insert(activityTable).values({
     id: makeId("activity"),
     timestamp: now(),
@@ -2119,3 +2154,4 @@ router.get(
 );
 
 export default router;
+
