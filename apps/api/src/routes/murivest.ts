@@ -5,24 +5,39 @@ import { eq } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   activityTable,
+  approvalsTable,
+  companiesTable,
   contactsTable,
   dealsTable,
   documentsTable,
+  expensesTable,
   financeRecordsTable,
+  insertCompanySchema,
   insertContactSchema,
   insertDealSchema,
   insertDocumentSchema,
+  insertExpenseSchema,
   insertFinanceRecordSchema,
+  insertInvoiceSchema,
   insertLegalMatterSchema,
+  insertMandateSchema,
+  insertMeetingSchema,
   insertOperatingRecordSchema,
   insertPropertySchema,
   insertTaskSchema,
+  invoicesTable,
   legalMattersTable,
+  mandatesTable,
+  meetingsTable,
   notificationsTable,
   operatingRecordsTable,
   propertiesTable,
   tasksTable,
   usersTable,
+  campaignsTable,
+  investorsTable,
+  insertCampaignSchema,
+  insertInvestorSchema,
   db,
 } from "@murivest/db";
 
@@ -31,12 +46,11 @@ const router: IRouter = Router();
 const ADMIN_EMAIL = "murivestrealty@gmail.com";
 const today = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
-const makeId = (prefix: string) => `${prefix}_${crypto.randomUUID().slice(0, 8)}`;
+const makeId = (prefix: string) =>
+  `${prefix}_${crypto.randomUUID().slice(0, 8)}`;
 
 const asyncHandler =
-  (
-    fn: (req: any, res: any, next: any) => Promise<unknown>,
-  ): RequestHandler =>
+  (fn: (req: any, res: any, next: any) => Promise<unknown>): RequestHandler =>
   (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
@@ -78,12 +92,10 @@ const PropertyBody = insertPropertySchema
     city: z.string().min(1),
   });
 
-const DealBody = insertDealSchema
-  .omit({ id: true, probability: true })
-  .extend({
-    title: z.string().min(1),
-    stage: z.string().min(1),
-  });
+const DealBody = insertDealSchema.omit({ id: true, probability: true }).extend({
+  title: z.string().min(1),
+  stage: z.string().min(1),
+});
 
 const TaskBody = insertTaskSchema.omit({ id: true }).extend({
   title: z.string().min(1),
@@ -121,6 +133,49 @@ const OperatingBody = insertOperatingRecordSchema.omit({ id: true }).extend({
   details: z.string().min(1),
 });
 
+const CompanyBody = insertCompanySchema.omit({ id: true }).extend({
+  name: z.string().min(1),
+  type: z.string().min(1),
+});
+
+const MeetingBody = insertMeetingSchema.omit({ id: true }).extend({
+  title: z.string().min(1),
+  meetingType: z.string().min(1),
+  scheduledAt: z.string().min(1),
+  durationMinutes: z.number().min(1),
+});
+
+const MandateBody = insertMandateSchema.omit({ id: true }).extend({
+  propertyId: z.string().min(1),
+  mandateType: z.string().min(1),
+});
+
+const InvoiceBody = insertInvoiceSchema.omit({ id: true }).extend({
+  invoiceNumber: z.string().min(1),
+  invoiceType: z.string().min(1),
+  issueDate: z.string().min(1),
+  dueDate: z.string().min(1),
+  subtotalKes: z.number(),
+  totalKes: z.number(),
+});
+
+const ExpenseBody = insertExpenseSchema.omit({ id: true }).extend({
+  description: z.string().min(1),
+  category: z.string().min(1),
+  amountKes: z.number(),
+});
+
+const CampaignBody = insertCampaignSchema.omit({ id: true }).extend({
+  name: z.string().min(1),
+  campaignType: z.string().min(1),
+  channel: z.string().min(1),
+});
+
+const InvestorBody = insertInvestorSchema.omit({ id: true }).extend({
+  contactId: z.string().min(1),
+  investorType: z.string().min(1),
+});
+
 const NotificationBody = z.object({
   subject: z.string().min(1),
   message: z.string().min(1),
@@ -143,10 +198,15 @@ type AuthedRequest = Parameters<RequestHandler>[0] & {
   userContext?: UserContext;
 };
 
-async function getUserContext(req: Parameters<RequestHandler>[0]): Promise<UserContext> {
+async function getUserContext(
+  req: Parameters<RequestHandler>[0],
+): Promise<UserContext> {
   const auth = getAuth(req);
   const claims = (auth.sessionClaims ?? {}) as Record<string, unknown>;
-  const publicMetadata = (claims.publicMetadata ?? {}) as Record<string, unknown>;
+  const publicMetadata = (claims.publicMetadata ?? {}) as Record<
+    string,
+    unknown
+  >;
   const metadata = (claims.metadata ?? {}) as Record<string, unknown>;
 
   const email = String(
@@ -405,20 +465,31 @@ router.get(
 router.get(
   "/murivest/command-center",
   asyncHandler(async (_req, res) => {
-    const [contacts, properties, deals, tasks, legal, operating, notifications] =
-      await Promise.all([
-        db.select().from(contactsTable),
-        db.select().from(propertiesTable),
-        db.select().from(dealsTable),
-        db.select().from(tasksTable),
-        db.select().from(legalMattersTable),
-        db.select().from(operatingRecordsTable),
-        db.select().from(notificationsTable),
-      ]);
+    const [
+      contacts,
+      properties,
+      deals,
+      tasks,
+      legal,
+      operating,
+      notifications,
+    ] = await Promise.all([
+      db.select().from(contactsTable),
+      db.select().from(propertiesTable),
+      db.select().from(dealsTable),
+      db.select().from(tasksTable),
+      db.select().from(legalMattersTable),
+      db.select().from(operatingRecordsTable),
+      db.select().from(notificationsTable),
+    ]);
 
-    const pipelineValue = deals.reduce((sum, deal) => sum + Number(deal.value ?? 0), 0);
+    const pipelineValue = deals.reduce(
+      (sum, deal) => sum + Number(deal.value ?? 0),
+      0,
+    );
     const weightedAum = deals.reduce(
-      (sum, deal) => sum + Number(deal.value ?? 0) * (Number(deal.probability ?? 0) / 100),
+      (sum, deal) =>
+        sum + Number(deal.value ?? 0) * (Number(deal.probability ?? 0) / 100),
       0,
     );
 
@@ -443,7 +514,10 @@ router.get(
       ).length;
 
     const legalExposure =
-      legal.reduce((sum, matter) => sum + Number(matter.exposureAmount ?? 0), 0) +
+      legal.reduce(
+        (sum, matter) => sum + Number(matter.exposureAmount ?? 0),
+        0,
+      ) +
       operating
         .filter((record) =>
           ["disputes-litigation", "legal-billing"].includes(record.module),
@@ -454,7 +528,12 @@ router.get(
       .filter((record) => record.module === "daily-log")
       .reduce(
         (sum, record) =>
-          sum + Number((record.metadata as Record<string, unknown> | null)?.score ?? record.amount ?? 0),
+          sum +
+          Number(
+            (record.metadata as Record<string, unknown> | null)?.score ??
+              record.amount ??
+              0,
+          ),
         0,
       );
 
@@ -539,7 +618,8 @@ router.get(
         {
           id: "exec",
           name: "Executive / Admin",
-          purpose: "Full command, approvals, permissions and board-ready reporting",
+          purpose:
+            "Full command, approvals, permissions and board-ready reporting",
           kpis: ["Revenue", "Approval SLA", "Risk exposure", "BI readiness"],
           interactsWith: ["All departments", "All portals"],
         },
@@ -554,7 +634,8 @@ router.get(
         {
           id: "marketing",
           name: "Marketing & Growth",
-          purpose: "Campaigns, social media, content calendar and lead attribution",
+          purpose:
+            "Campaigns, social media, content calendar and lead attribution",
           kpis: ["Campaign ROI", "Lead source", "Content cadence"],
           interactsWith: ["Sales", "Property", "Investor Relations"],
         },
@@ -568,7 +649,8 @@ router.get(
         {
           id: "it",
           name: "IT / Product",
-          purpose: "Bugs, releases, roadmap, integrations and support reliability",
+          purpose:
+            "Bugs, releases, roadmap, integrations and support reliability",
           kpis: ["Release cadence", "Bug SLA", "Uptime"],
           interactsWith: ["Support", "Operations", "All departments"],
         },
@@ -600,7 +682,8 @@ router.post(
     const input = req.body;
     const validated = ContactBody.parse({
       firstName: input.firstName || input.name?.split(" ")[0] || "Unknown",
-      lastName: input.lastName || input.name?.split(" ").slice(1).join(" ") || "",
+      lastName:
+        input.lastName || input.name?.split(" ").slice(1).join(" ") || "",
       fullName: input.fullName || input.name || "",
       name: input.name || input.fullName || "",
       category: input.category || input.contactCategory || "other",
@@ -776,7 +859,8 @@ router.post(
       value: Number(input.value || input.valueKes || 0),
       valueKes: Number(input.valueKes || input.value || 0),
       closeProbability: probabilityFor(stage),
-      expectedCloseDate: input.expectedCloseDate || input.expected_close_date || "",
+      expectedCloseDate:
+        input.expectedCloseDate || input.expected_close_date || "",
       closeDate: input.closeDate || "",
       nextStep: input.nextStep || "",
       owner: input.owner || "",
@@ -993,8 +1077,9 @@ router.post(
       deadline: input.deadline || "",
       deadlineAt: input.deadlineAt ? new Date(input.deadlineAt) : null,
       exposureAmount: Number(input.exposureAmount || 0),
-      exposureAmountKes:
-        Number(input.exposureAmountKes || input.exposureAmount || 0),
+      exposureAmountKes: Number(
+        input.exposureAmountKes || input.exposureAmount || 0,
+      ),
       nextAction: input.nextAction || "",
     });
 
@@ -1153,7 +1238,9 @@ router.post(
       .returning();
 
     if (
-      ["mandates", "daily-log", "capital-partners", "meetings-kpis"].includes(module)
+      ["mandates", "daily-log", "capital-partners", "meetings-kpis"].includes(
+        module,
+      )
     ) {
       await sendNotification(
         `Murivest ${module} update`,
@@ -1229,13 +1316,15 @@ router.get(
       return;
     }
 
-    const [contacts, properties, deals, documents, records] = await Promise.all([
-      db.select().from(contactsTable),
-      db.select().from(propertiesTable),
-      db.select().from(dealsTable),
-      db.select().from(documentsTable),
-      db.select().from(operatingRecordsTable),
-    ]);
+    const [contacts, properties, deals, documents, records] = await Promise.all(
+      [
+        db.select().from(contactsTable),
+        db.select().from(propertiesTable),
+        db.select().from(dealsTable),
+        db.select().from(documentsTable),
+        db.select().from(operatingRecordsTable),
+      ],
+    );
 
     res.json({
       portal,
@@ -1349,7 +1438,9 @@ router.get(
   "/murivest/lookup/users",
   asyncHandler(async (_req, res) => {
     const users = await db.select().from(usersTable);
-    res.json(users.map((u) => ({ value: u.fullName, label: u.fullName, id: u.id })));
+    res.json(
+      users.map((u) => ({ value: u.fullName, label: u.fullName, id: u.id })),
+    );
   }),
 );
 
@@ -1564,6 +1655,466 @@ router.get(
   asyncHandler(async (_req, res) => {
     const users = await db.select().from(usersTable);
     res.json(users);
+  }),
+);
+
+// ============ COMPANIES ============
+router.get(
+  "/murivest/companies",
+  requireRole(["internal_team"]),
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(companiesTable));
+  }),
+);
+
+router.post(
+  "/murivest/companies",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const validated = CompanyBody.parse({
+      name: input.name || "",
+      type: input.type || "other",
+      displayName: input.displayName || "",
+      registrationNumber: input.registrationNumber || "",
+      taxId: input.taxId || "",
+      country: input.country || "Kenya",
+      city: input.city || "",
+      addressLine1: input.addressLine1 || "",
+      addressLine2: input.addressLine2 || "",
+      notes: input.notes || "",
+    });
+
+    const [created] = await db
+      .insert(companiesTable)
+      .values({ ...validated, id: makeId("company") })
+      .returning();
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/companies/:id",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const body = CompanyBody.partial().parse(req.body);
+    const [updated] = await db
+      .update(companiesTable)
+      .set(body)
+      .where(eq(companiesTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ MEETINGS ============
+router.get(
+  "/murivest/meetings",
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(meetingsTable));
+  }),
+);
+
+router.post(
+  "/murivest/meetings",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const validated = MeetingBody.parse({
+      title: input.title || "",
+      meetingType: input.meetingType || "general",
+      scheduledAt: input.scheduledAt || new Date().toISOString(),
+      durationMinutes: input.durationMinutes || 60,
+      location: input.location || "",
+      owner: input.owner || "",
+      status: input.status || "scheduled",
+      attendees: input.attendees || [],
+      notes: input.notes || "",
+      actionItems: input.actionItems || [],
+    });
+
+    const [created] = await db
+      .insert(meetingsTable)
+      .values({ ...validated, id: makeId("meeting") })
+      .returning();
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/meetings/:id",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const body = MeetingBody.partial().parse(req.body);
+    const [updated] = await db
+      .update(meetingsTable)
+      .set(body)
+      .where(eq(meetingsTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ MANDATES ============
+router.get(
+  "/murivest/mandates",
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(mandatesTable));
+  }),
+);
+
+router.post(
+  "/murivest/mandates",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const validated = MandateBody.parse({
+      propertyId: input.propertyId || "",
+      mandateType: input.mandateType || "exclusive",
+      status: input.status || "draft",
+      startDate: input.startDate || null,
+      expiryDate: input.expiryDate || null,
+      exclusivityEndDate: input.exclusivityEndDate || null,
+      askingPriceKes: Number(input.askingPriceKes || 0),
+      valuationKes: Number(input.valuationKes || 0),
+      feePercent: Number(input.feePercent || 0),
+    });
+
+    const [created] = await db
+      .insert(mandatesTable)
+      .values({ ...validated, id: makeId("mandate") })
+      .returning();
+
+    await sendNotification(
+      "New mandate created",
+      `Mandate ${validated.mandateType} created for property.`,
+      "mandates",
+    );
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/mandates/:id",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const body = MandateBody.partial().parse(req.body);
+    const [updated] = await db
+      .update(mandatesTable)
+      .set(body)
+      .where(eq(mandatesTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ INVOICES ============
+router.get(
+  "/murivest/invoices",
+  requireRole(["finance", "internal_team"]),
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(invoicesTable));
+  }),
+);
+
+router.post(
+  "/murivest/invoices",
+  requireRole(["finance", "internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const validated = InvoiceBody.parse({
+      invoiceNumber: input.invoiceNumber || `INV-${Date.now()}`,
+      invoiceType: input.invoiceType || "sales",
+      companyId: input.companyId || null,
+      contactId: input.contactId || null,
+      dealId: input.dealId || null,
+      propertyId: input.propertyId || null,
+      legalMatterId: input.legalMatterId || null,
+      issueDate: input.issueDate || today(),
+      dueDate: input.dueDate || today(),
+      subtotalKes: Number(input.subtotalKes || 0),
+      taxKes: Number(input.taxKes || 0),
+      totalKes: Number(input.totalKes || 0),
+      paidAmountKes: Number(input.paidAmountKes || 0),
+      status: input.status || "draft",
+      notes: input.notes || "",
+    });
+
+    const [created] = await db
+      .insert(invoicesTable)
+      .values({ ...validated, id: makeId("invoice") })
+      .returning();
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/invoices/:id",
+  requireRole(["finance", "internal_team"]),
+  asyncHandler(async (req, res) => {
+    const body = InvoiceBody.partial().parse(req.body);
+    const [updated] = await db
+      .update(invoicesTable)
+      .set(body)
+      .where(eq(invoicesTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ EXPENSES ============
+router.get(
+  "/murivest/expenses",
+  requireRole(["finance", "internal_team"]),
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(expensesTable));
+  }),
+);
+
+router.post(
+  "/murivest/expenses",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const validated = ExpenseBody.parse({
+      description: input.description || "",
+      category: input.category || "other",
+      amountKes: Number(input.amountKes || 0),
+      departmentCode: input.departmentCode || "",
+      department: input.department || "",
+      companyId: input.companyId || null,
+      legalMatterId: input.legalMatterId || null,
+      status: input.status || "submitted",
+      expenseDate: input.expenseDate || today(),
+    });
+
+    const [created] = await db
+      .insert(expensesTable)
+      .values({ ...validated, id: makeId("expense") })
+      .returning();
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/expenses/:id",
+  requireRole(["finance", "internal_team"]),
+  asyncHandler(async (req, res) => {
+    const body = ExpenseBody.partial().parse(req.body);
+    const [updated] = await db
+      .update(expensesTable)
+      .set(body)
+      .where(eq(expensesTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ CAMPAIGNS ============
+router.get(
+  "/murivest/campaigns",
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(campaignsTable));
+  }),
+);
+
+router.post(
+  "/murivest/campaigns",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const validated = CampaignBody.parse({
+      name: input.name || "",
+      campaignType: input.campaignType || "general",
+      channel: input.channel || "email",
+      status: input.status || "draft",
+      linkedPropertyId: input.linkedPropertyId || null,
+      owner: input.owner || "",
+      budgetKes: Number(input.budgetKes || 0),
+      leadSource: input.leadSource || "",
+      leadsGenerated: Number(input.leadsGenerated || 0),
+      spendKes: Number(input.spendKes || 0),
+      startDate: input.startDate || null,
+      endDate: input.endDate || null,
+    });
+
+    const [created] = await db
+      .insert(campaignsTable)
+      .values({ ...validated, id: makeId("campaign") })
+      .returning();
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/campaigns/:id",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const body = CampaignBody.partial().parse(req.body);
+    const [updated] = await db
+      .update(campaignsTable)
+      .set(body)
+      .where(eq(campaignsTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ INVESTORS ============
+router.get(
+  "/murivest/investors",
+  requireRole(["internal_team", "sales", "investor_relations"]),
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(investorsTable));
+  }),
+);
+
+router.post(
+  "/murivest/investors",
+  requireRole(["internal_team", "investor_relations"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const validated = InvestorBody.parse({
+      contactId: input.contactId || "",
+      investorType: input.investorType || "individual",
+      ticketSizeMinKes: Number(input.ticketSizeMinKes || 0),
+      ticketSizeMaxKes: Number(input.ticketSizeMaxKes || 0),
+      assetClassInterest: input.assetClassInterest || [],
+      geographyPreference: input.geographyPreference || [],
+      targetYield: Number(input.targetYield || 0),
+      riskProfile: input.riskProfile || "",
+      kycStatus: input.kycStatus || "pending",
+      ndaStatus: input.ndaStatus || "pending",
+    });
+
+    const [created] = await db
+      .insert(investorsTable)
+      .values({ ...validated, id: makeId("investor") })
+      .returning();
+
+    await sendNotification(
+      "New investor added",
+      `Investor profile created with type: ${validated.investorType}`,
+      "investors",
+    );
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/investors/:id",
+  requireRole(["internal_team", "investor_relations"]),
+  asyncHandler(async (req, res) => {
+    const body = InvestorBody.partial().parse(req.body);
+    const [updated] = await db
+      .update(investorsTable)
+      .set(body)
+      .where(eq(investorsTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ APPROVALS ============
+router.get(
+  "/murivest/approvals",
+  requireRole(["internal_team"]),
+  asyncHandler(async (_req, res) => {
+    res.json(await db.select().from(approvalsTable));
+  }),
+);
+
+router.post(
+  "/murivest/approvals",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const [created] = await db
+      .insert(approvalsTable)
+      .values({
+        id: makeId("approval"),
+        entityType: input.entityType || "",
+        entityId: input.entityId || "",
+        approvalType: input.approvalType || "",
+        status: input.status || "submitted",
+        requestedByUserId: input.requestedByUserId || null,
+        notes: input.notes || "",
+      })
+      .returning();
+
+    res.status(201).json(created);
+  }),
+);
+
+router.patch(
+  "/murivest/approvals/:id",
+  requireRole(["internal_team"]),
+  asyncHandler(async (req, res) => {
+    const input = req.body;
+    const [updated] = await db
+      .update(approvalsTable)
+      .set({
+        status: input.status,
+        approvedByUserId: input.approvedByUserId || null,
+        decidedAt: input.status ? new Date() : null,
+        decisionNotes: input.decisionNotes || "",
+      })
+      .where(eq(approvalsTable.id, req.params.id))
+      .returning();
+
+    res.json(updated ?? null);
+  }),
+);
+
+// ============ LOOKUP ROUTES ============
+router.get(
+  "/murivest/lookup/investors",
+  asyncHandler(async (_req, res) => {
+    const investors = await db.select().from(investorsTable);
+    res.json(
+      investors.map((i) => ({
+        value: i.id,
+        label: i.id,
+        kycStatus: i.kycStatus,
+        ndaStatus: i.ndaStatus,
+      })),
+    );
+  }),
+);
+
+router.get(
+  "/murivest/lookup/meetings-today",
+  asyncHandler(async (_req, res) => {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+    const todayEnd = new Date();
+    todayEnd.setHours(23, 59, 59, 999);
+
+    const meetings = await db
+      .select()
+      .from(meetingsTable)
+      .where(
+        require("and")([
+          require(">=")(meetingsTable.scheduledAt, todayStart.toISOString()),
+          require("<=")(meetingsTable.scheduledAt, todayEnd.toISOString()),
+        ]) as any,
+      );
+
+    res.json(meetings);
   }),
 );
 

@@ -549,6 +549,14 @@ export const insertOperatingRecordSchema = createInsertSchema(
 );
 export const insertNotificationSchema = createInsertSchema(notificationsTable);
 export const insertActivitySchema = createInsertSchema(activityTable);
+export const insertCompanySchema = createInsertSchema(companiesTable);
+export const insertMandateSchema = createInsertSchema(mandatesTable);
+export const insertMeetingSchema = createInsertSchema(meetingsTable);
+export const insertInvoiceSchema = createInsertSchema(invoicesTable);
+export const insertExpenseSchema = createInsertSchema(expensesTable);
+export const insertCampaignSchema = createInsertSchema(campaignsTable);
+export const insertInvestorSchema = createInsertSchema(investorsTable);
+export const insertApprovalSchema = createInsertSchema(approvalsTable);
 
 export type ContactsRecord = z.infer<typeof insertContactSchema>;
 export type PropertiesRecord = z.infer<typeof insertPropertySchema>;
