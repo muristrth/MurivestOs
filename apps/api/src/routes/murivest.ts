@@ -4,8 +4,11 @@ import { eq, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   activityTable,
+  appRolesTable,
+  companiesTable,
   contactsTable,
   dealsTable,
+  departmentsTable,
   documentsTable,
   financeRecordsTable,
   insertContactSchema,
@@ -108,7 +111,7 @@ const NotificationBody = z.object({
   recipient: z.string().email().default(ADMIN_EMAIL),
 });
 
-function getUserContext(req: Parameters<RequestHandler>[0]) {
+async function getUserContext(req: Parameters<RequestHandler>[0]) {
   const auth = getAuth(req);
   const claims = (auth.sessionClaims ?? {}) as Record<string, unknown>;
   const publicMetadata = (claims.publicMetadata ?? {}) as Record<
@@ -122,11 +125,40 @@ function getUserContext(req: Parameters<RequestHandler>[0]) {
       claims.email_address ??
       "authenticated-user@murivest.local",
   ).toLowerCase();
-  const role = String(
-    publicMetadata.role ??
-      metadata.role ??
-      (email === ADMIN_EMAIL ? "super_admin" : "internal_team"),
-  );
+
+  // Check DB for role override first
+  let dbRole: string | null = null;
+  let dbIsApproved = false;
+  let dbIsActive = true;
+  let dbCanLogin = true;
+
+  if (auth.userId) {
+    const [dbUser] = await db
+      .select({
+        roleSlug: usersTable.roleSlug,
+        isApproved: usersTable.isApproved,
+        isActive: usersTable.isActive,
+        canLogin: usersTable.canLogin,
+      })
+      .from(usersTable)
+      .where(eq(usersTable.clerkUserId, auth.userId))
+      .limit(1);
+
+    if (dbUser) {
+      dbRole = dbUser.roleSlug;
+      dbIsApproved = dbUser.isApproved;
+      dbIsActive = dbUser.isActive;
+      dbCanLogin = dbUser.canLogin;
+    }
+  }
+
+  const role =
+    dbRole ??
+    String(
+      publicMetadata.role ??
+        metadata.role ??
+        (email === ADMIN_EMAIL ? "super_admin" : "internal_team"),
+    );
   const department = String(
     publicMetadata.department ?? metadata.department ?? "Executive / Admin",
   );
@@ -136,15 +168,20 @@ function getUserContext(req: Parameters<RequestHandler>[0]) {
     name: String(claims.name ?? email),
     role,
     department,
+    isApproved: dbIsApproved,
+    isActive: dbIsActive,
+    canLogin: dbCanLogin,
   };
 }
 
 const requireAuth: RequestHandler = async (req, res, next) => {
-  const context = getUserContext(req);
+  const context = await getUserContext(req);
   if (!context.userId) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
+
+  // Upsert user (create or update)
   await db
     .insert(usersTable)
     .values({
@@ -155,9 +192,9 @@ const requireAuth: RequestHandler = async (req, res, next) => {
       lastName: context.name.split(" ").slice(1).join(" "),
       fullName: context.name,
       roleSlug: context.role,
-      isApproved: true,
-      canLogin: true,
-      isActive: true,
+      isApproved: context.isApproved,
+      canLogin: context.canLogin,
+      isActive: context.isActive,
       userType: "internal",
       lastLoginAt: new Date(),
     })
@@ -172,9 +209,43 @@ const requireAuth: RequestHandler = async (req, res, next) => {
         lastLoginAt: new Date(),
       },
     });
+
+  // Re-fetch to get current approval status
+  const updatedContext = await getUserContext(req);
+
+  // Check if user is approved
+  if (!updatedContext.isApproved && updatedContext.role !== "super_admin") {
+    res.status(403).json({
+      error: "Pending approval",
+      message: "Your account is awaiting approval from an administrator.",
+      status: "pending_approval",
+    });
+    return;
+  }
+
+  // Check if user can login
+  if (!updatedContext.canLogin) {
+    res.status(403).json({
+      error: "Access denied",
+      message: "Your account has been disabled.",
+      status: "access_disabled",
+    });
+    return;
+  }
+
+  // Check if user is active
+  if (!updatedContext.isActive) {
+    res.status(403).json({
+      error: "Account inactive",
+      message: "Your account is no longer active.",
+      status: "account_inactive",
+    });
+    return;
+  }
+
   (
     req as typeof req & { userContext: ReturnType<typeof getUserContext> }
-  ).userContext = context;
+  ).userContext = updatedContext;
   next();
 };
 
@@ -1956,7 +2027,7 @@ router.get("/murivest/lookup/departments", async (_req, res) => {
 
 router.get("/murivest/lookup/pipeline-owners", async (_req, res) => {
   const users = await db.select().from(usersTable);
-  res.json(users.map((u) => ({ value: u.name, label: u.name })));
+  res.json(users.map((u) => ({ value: u.fullName, label: u.fullName })));
 });
 
 router.patch(
@@ -1964,19 +2035,105 @@ router.patch(
   requireRole(["super_admin"]),
   async (req, res) => {
     const { userId } = req.params;
-    const { role, department, isApproved } = req.body;
+    const { role, isApproved, canLogin, isActive } = req.body;
     const context = (
       req as typeof req & { userContext: ReturnType<typeof getUserContext> }
     ).userContext;
 
+    const updateData: Record<string, unknown> = {
+      roleSlug: role,
+      departmentId: null,
+    };
+
+    if (isApproved !== undefined) {
+      updateData.isApproved = isApproved;
+      updateData.approvedAt = isApproved ? new Date() : null;
+    }
+
+    if (canLogin !== undefined) {
+      updateData.canLogin = canLogin;
+    }
+
+    if (isActive !== undefined) {
+      updateData.isActive = isActive;
+    }
+
+    const [updated] = await db
+      .update(usersTable)
+      .set(updateData)
+      .where(eq(usersTable.clerkUserId, userId))
+      .returning();
+
+    res.json(updated);
+  },
+);
+
+router.patch(
+  "/murivest/admin/users/:userId/reject",
+  requireRole(["super_admin"]),
+  async (req, res) => {
+    const { userId } = req.params;
+    const { reason } = req.body;
+
     const [updated] = await db
       .update(usersTable)
       .set({
-        roleSlug: role,
-        departmentId: null,
-        isApproved: isApproved ?? true,
-        approvedAt: isApproved ? new Date() : null,
-        approvedByUserId: context?.userId,
+        isApproved: false,
+        canLogin: false,
+        isActive: false,
+        approvedAt: null,
+      })
+      .where(eq(usersTable.clerkUserId, userId))
+      .returning();
+
+    await sendNotification(
+      "User Access Rejected",
+      `Your access to Murivest OS has been rejected.${reason ? ` Reason: ${reason}` : ""}`,
+      "admin",
+    );
+
+    res.json(updated);
+  },
+);
+
+router.post(
+  "/murivest/admin/users/:userId/activate",
+  requireRole(["super_admin"]),
+  async (req, res) => {
+    const { userId } = req.params;
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({
+        isApproved: true,
+        canLogin: true,
+        isActive: true,
+        approvedAt: new Date(),
+      })
+      .where(eq(usersTable.clerkUserId, userId))
+      .returning();
+
+    await sendNotification(
+      "User Access Approved",
+      "Your access to Murivest OS has been approved. You can now log in.",
+      "admin",
+    );
+
+    res.json(updated);
+  },
+);
+
+router.post(
+  "/murivest/admin/users/:userId/deactivate",
+  requireRole(["super_admin"]),
+  async (req, res) => {
+    const { userId } = req.params;
+
+    const [updated] = await db
+      .update(usersTable)
+      .set({
+        canLogin: false,
+        isActive: false,
       })
       .where(eq(usersTable.clerkUserId, userId))
       .returning();
