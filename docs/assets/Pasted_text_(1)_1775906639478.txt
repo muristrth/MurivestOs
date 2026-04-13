@@ -1,0 +1,183 @@
+1. Inception & Planning Documents
+Project Charter / Business Case
+Purpose, scope, objectives, stakeholders
+Budget authorization and resource allocation
+Success criteria and ROI projections
+Feasibility Study
+Technical feasibility (can we build it?)
+Economic feasibility (should we build it?)
+Operational feasibility (will it be adopted?)
+Project Plan (PMBOK/Prince2)
+Work breakdown structure (WBS)
+Schedule (Gantt charts, milestones)
+Resource allocation and RACI matrix
+Communication plan
+2. Requirements Engineering (The SRS Family)
+Software Requirements Specification (SRS) — IEEE 830 / ISO/IEC/IEEE 29148
+Functional Requirements: Use cases, user stories, feature specifications
+Non-functional Requirements: Performance, security, scalability, usability
+System Interfaces: Hardware, software, communication interfaces
+Data Requirements: Data models, dictionaries, retention policies
+Constraints: Regulatory, technical, business limitations
+Assumptions and Dependencies
+Supplementary Specifications
+User Interface Requirements (wireframes, prototypes)
+Domain Model / Business Rules Document
+Compliance Requirements (GDPR, HIPAA, SOX, etc.)
+3. Architecture & Design Documents
+High-Level Design (HLD) / Architecture Design Document
+Architectural patterns (microservices, monolith, serverless)
+Technology stack justification
+System context diagram
+Deployment architecture
+Security architecture
+Low-Level Design (LLD) / Detailed Design Document
+Class diagrams, sequence diagrams, state machines
+Database schema (ER diagrams, migration scripts)
+API specifications (OpenAPI/Swagger, GraphQL schemas)
+Algorithm descriptions and pseudo-code
+Error handling strategies
+UX/UI Design System
+Style guides and component libraries
+Interaction patterns and accessibility standards (WCAG)
+User journey maps and personas
+4. Implementation & Development Documents
+Technical Specification / Developer Guide
+Coding standards and conventions
+Environment setup instructions
+Build and deployment scripts
+Dependency management
+Code Documentation
+Inline comments and docstrings
+README files (project, module, API levels)
+Architecture Decision Records (ADRs) — why choices were made
+Change logs and release notes
+Database Documentation
+Data dictionary (field definitions, constraints)
+Migration scripts and versioning strategy
+Backup and recovery procedures
+5. Quality Assurance & Testing Documents
+Test Plan (IEEE 829)
+Scope, approach, resources, schedule
+Testing environments and data requirements
+Entry/exit criteria
+Test Cases & Scripts
+Unit test specifications
+Integration test scenarios
+System test cases (functional and non-functional)
+User Acceptance Testing (UAT) scripts
+Regression test suites
+Test Reports
+Bug reports and defect tracking
+Test execution summaries
+Performance benchmarks and load testing results
+Security audit reports (penetration testing, vulnerability assessments)
+Traceability Matrix
+Mapping requirements to test cases to code modules
+6. Deployment & Operations (DevOps)
+Deployment Documentation
+Release notes and version manifests
+Deployment procedures (blue-green, canary, rolling updates)
+Rollback procedures
+Infrastructure as Code (IaC) documentation
+Operations Manual / Runbook
+System monitoring and alerting thresholds
+Incident response procedures (playbooks)
+Disaster recovery plans (RTO/RPO definitions)
+Maintenance windows and procedures
+Configuration Management
+Environment configuration matrices (dev, staging, prod)
+Secret management and key rotation procedures
+7. User-Facing Documentation
+User Manual / Help System
+Installation guides
+Feature guides and tutorials
+FAQs and troubleshooting
+Video walkthroughs
+API Consumer Documentation
+Developer portals
+SDK documentation
+Code samples and sandbox environments
+Training Materials
+Admin guides vs. End-user guides
+Quick reference cards
+Certification materials
+8. Governance & Compliance
+Risk Management Plan
+Risk register (technical, business, operational)
+Mitigation strategies and contingency plans
+Security Documentation
+Threat models (STRIDE, PASTA)
+Security controls matrix
+Privacy Impact Assessments (PIA)
+Audit trails and logging specifications
+Compliance Documentation
+Validation protocols (for regulated industries)
+Electronic Records and Signatures (21 CFR Part 11)
+Accessibility compliance reports (Section 508, EN 301 549)
+9. Maintenance & Evolution
+Change Request Forms
+Impact analysis documents
+Migration plans for legacy data
+Deprecation notices and end-of-life plans
+Knowledge Transfer Documents
+Architecture overview for new team members
+"Bus factor" mitigation docs (critical system knowledge)
+Methodology-Specific Variations
+Traditional/Waterfall: Heavy upfront documentation; all documents listed above are formal, version-controlled, and approval-gated.
+Agile/Scrum: Living documentation in Wikis/Confluence; Definition of Done (DoD) includes documentation; Product Backlog and Sprint Backlogs serve as dynamic requirements; User Stories replace formal SRS sections; Continuous documentation via automated tools (Swagger, TypeDoc).
+Lean/Startup: Minimal viable documentation—often just READMEs, automated API docs, and runbooks.
+Critical Success Factors
+Audience Awareness: Write for the reader (executives need different detail than developers)
+Single Source of Truth: Avoid documentation drift between code and docs
+Living Documents: Version control everything; review docs with code reviews
+Automation: Generate docs from code where possible (OpenAPI, Javadoc, Sphinx)
+Just Enough: Documentation has maintenance cost—balance comprehensiveness with agility
+For regulated industries (medical devices, aviation, banking), the SRS and Verification & Validation documents become legal artifacts subject to audit trails. For internal tools, a README and API docs may suffice.
+Would you like me to elaborate on any specific document type or provide templates for particular sections (e.g., how to structure an IEEE 830-compliant SRS)?
+give me a list of documents i need including the requirements specifications, architecture etc
+Edit
+Copy
+Share
+Create Phase‑Based Documentation Checklist with Must‑Have, Should‑Have, Nice‑to‑Have Items
+Here's your essential software development document checklist, organized by SDLC phase:
+1. Project Foundation
+Project Charter – Scope, stakeholders, budget authorization
+Business Requirements Document (BRD) – Business objectives and success metrics
+Risk Register – Technical and business risks with mitigation plans
+2. Requirements Specifications
+Software Requirements Specification (SRS) – Functional & non-functional requirements, constraints, interfaces
+User Stories / Use Cases – Actor-system interactions (Agile alternative/supplement to SRS)
+Data Requirements Document – Data dictionary, retention policies, GDPR/compliance needs
+3. Architecture & Design
+System Architecture Document (SAD) – High-level patterns, tech stack, deployment topology
+Database Design Document – ER diagrams, schema definitions, migration strategy
+API Specification – OpenAPI/Swagger specs, authentication flows, rate limiting
+Security Architecture – Threat model, encryption standards, access control matrix
+UX/UI Design System – Wireframes, component library, style guide, accessibility standards
+4. Implementation
+Technical Specification – Coding standards, environment setup, build procedures
+Architecture Decision Records (ADRs) – Why key technical choices were made
+Code Documentation – Auto-generated API docs, READMEs, inline documentation
+5. Quality Assurance
+Test Plan – Strategy, environments, entry/exit criteria
+Test Cases – Unit, integration, system, UAT scenarios with expected results
+Traceability Matrix – Requirements → Test Cases → Code coverage
+Bug Report Templates – Severity classification, reproduction steps
+6. Deployment & Operations
+Deployment Runbook – Step-by-step release procedures, rollback plans
+Infrastructure as Code (IaC) Docs – Terraform/CloudFormation configurations
+Monitoring & Alerting Guide – Dashboards, thresholds, escalation procedures
+Disaster Recovery Plan – RTO/RPO targets, backup verification procedures
+7. User & Support Documentation
+User Manual – Installation, features, troubleshooting
+Admin Guide – Configuration, user management, maintenance tasks
+Training Materials – Quick starts, video tutorials, FAQ
+8. Compliance & Governance (if regulated)
+Validation Plan – For FDA/ISO compliance
+Privacy Impact Assessment (PIA) – Data flow analysis for GDPR/CCPA
+Audit Trail Specifications – Logging requirements for compliance
+Priority Guide:
+MVP/Startup: SRS (lightweight), Architecture Doc, API Specs, README, Test Cases
+Enterprise: Full list above with formal sign-offs
+Regulated (Healthcare/Finance): Everything formalized with version control and electronic signatures

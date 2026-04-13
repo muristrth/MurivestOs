@@ -1,0 +1,89 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-mono: var(--app-font-mono);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --background: 212 30% 95%;
+  --foreground: 218 57% 10%;
+  --border: 213 28% 86%;
+  --input: 213 28% 86%;
+  --ring: 209 64% 29%;
+  --card: 0 0% 100%;
+  --card-foreground: 218 57% 10%;
+  --primary: 209 64% 29%;
+  --primary-foreground: 210 36% 98%;
+  --secondary: 211 56% 13%;
+  --secondary-foreground: 210 36% 98%;
+  --muted: 214 35% 94%;
+  --muted-foreground: 213 19% 44%;
+  --accent: 35 64% 61%;
+  --accent-foreground: 218 57% 10%;
+  --destructive: 4 65% 43%;
+  --destructive-foreground: 210 36% 98%;
+  --app-font-sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --app-font-serif: Georgia, Cambria, "Times New Roman", serif;
+  --app-font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  --radius: .9rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: var(--app-font-sans);
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+button,
+a,
+input {
+  transition: all 160ms ease;
+}
+
+button:active,
+a:active {
+  transform: translateY(1px);
+}
+
+::selection {
+  background: #1b4b7c;
+  color: #eff5fc;
+}

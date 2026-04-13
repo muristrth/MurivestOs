@@ -1,0 +1,56 @@
+﻿
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+DATABASE DESIGN
+Database Design Document
+Data Model & Schema Specification for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document defines the database design for Murivest OS, including entity-relationship models, schema definitions, and data management strategies.
+1.2 Database Selection
+Murivest OS employs a polyglot persistence architecture:
+PostgreSQL 15+: Primary operational database for transactional data
+MongoDB 6+: Document store for unstructured content
+Redis 7+: Caching and session storage
+ClickHouse: Analytics warehouse for reporting
+2. Entity Relationship Model
+2.1 Core Entities
+EntityPrimary KeyDescriptionusersid (UUID)System users with authentication credentialscontactsid (UUID)External contacts (investors, landlords, tenants, prospects)companiesid (UUID)Organizations and legal entitiespropertiesid (UUID)Real estate assetsunitsid (UUID)Individual units within propertiesmandatesid (UUID)Authority to Sell agreementsdealsid (UUID)Transaction opportunitiestasksid (UUID)Action items and activitiesdocumentsid (UUID)File metadata and storage referencescampaignsid (UUID)Marketing initiatives3. Detailed Schema Definitions
+3.1 users Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifieremailVARCHAR(255)UNIQUE, NOT NULLLogin email addresspassword_hashVARCHAR(255)NOT NULLBcrypt hashed passwordfirst_nameVARCHAR(100)NOT NULLFirst namelast_nameVARCHAR(100)NOT NULLLast namerole_idUUIDFKReference to roles tabledepartment_idUUIDFKReference to departments tablephoneVARCHAR(20)NULLContact phone numberis_activeBOOLEANDEFAULT TRUEAccount statuslast_login_atTIMESTAMPNULLLast successful logincreated_atTIMESTAMPDEFAULT NOW()Record creation timestampupdated_atTIMESTAMPDEFAULT NOW()Last update timestamp3.2 contacts Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifiercontact_typeENUMNOT NULLType: investor, landlord, tenant, prospect, vendorfirst_nameVARCHAR(100)NOT NULLFirst namelast_nameVARCHAR(100)NOT NULLLast nameemailVARCHAR(255)UNIQUEEmail addressphoneVARCHAR(20)NULLPrimary phonecompany_idUUIDFKAssociated companyassigned_user_idUUIDFKAssigned relationship managerstatusVARCHAR(50)DEFAULT "active"Contact statussourceVARCHAR(100)NULLLead sourcenotesTEXTNULLInternal notescreated_atTIMESTAMPDEFAULT NOW()Creation timestampupdated_atTIMESTAMPDEFAULT NOW()Update timestamp3.3 properties Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifierproperty_nameVARCHAR(255)NOT NULLProperty name/titleproperty_typeENUMNOT NULLType: office, retail, industrial, residential, land, mixed-useaddressTEXTNOT NULLFull addresscityVARCHAR(100)NOT NULLCitycountryVARCHAR(100)NOT NULLCountrylatitudeDECIMAL(10,8)NULLGPS latitudelongitudeDECIMAL(11,8)NULLGPS longitudetotal_area_sqmDECIMAL(12,2)NULLTotal area in square meterslandlord_idUUIDFKProperty owner referencestatusENUMNOT NULLStatus: available, under_offer, sold, off_marketasking_priceDECIMAL(15,2)NULLAsking priceyield_percentDECIMAL(5,2)NULLRental yield percentageoccupancy_rateDECIMAL(5,2)NULLCurrent occupancy percentagewebsite_visibleBOOLEANDEFAULT FALSEVisible on public websitecreated_atTIMESTAMPDEFAULT NOW()Creation timestampupdated_atTIMESTAMPDEFAULT NOW()Update timestamp3.4 mandates Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifierproperty_idUUIDFKReference to propertymandate_typeENUMNOT NULLType: exclusive, open, solestart_dateDATENOT NULLMandate start dateexpiry_dateDATENOT NULLMandate expiry datecommission_percentDECIMAL(5,2)NOT NULLCommission percentageminimum_commissionDECIMAL(15,2)NULLMinimum commission amountstatusENUMNOT NULLStatus: active, expired, terminated, convertedsigned_agreement_urlVARCHAR(500)NULLURL to signed agreement documentcreated_byUUIDFKUser who created mandatecreated_atTIMESTAMPDEFAULT NOW()Creation timestamp3.5 deals Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifierdeal_nameVARCHAR(255)NOT NULLDeal name/referenceproperty_idUUIDFKReference to propertybuyer_contact_idUUIDFKBuyer/investor contactseller_contact_idUUIDFKSeller/landlord contactdeal_valueDECIMAL(15,2)NULLTransaction valuecommission_amountDECIMAL(15,2)NULLCommission earnedstageENUMNOT NULLStage: lead, qualified, site_visit, offer, negotiation, closing, closed_won, closed_lostprobabilityINTEGERDEFAULT 0Win probability percentageexpected_close_dateDATENULLExpected closing dateactual_close_dateDATENULLActual closing dateassigned_user_idUUIDFKAssigned deal ownercreated_atTIMESTAMPDEFAULT NOW()Creation timestampupdated_atTIMESTAMPDEFAULT NOW()Update timestamp4. Key Relationships
+From TableForeign KeyTo TablePrimary KeyRelationshipusersdepartment_iddepartmentsidMany-to-Oneusersrole_idrolesidMany-to-Onecontactscompany_idcompaniesidMany-to-Onecontactsassigned_user_idusersidMany-to-Onepropertieslandlord_idcontactsidMany-to-Onemandatesproperty_idpropertiesidMany-to-Onedealsproperty_idpropertiesidMany-to-Onedealsbuyer_contact_idcontactsidMany-to-Onedealsassigned_user_idusersidMany-to-One5. Indexing Strategy
+Index NameColumnsPurposeusers_email_idxusers(email)Unique login lookupcontacts_type_idxcontacts(contact_type)Filter by contact typecontacts_assigned_idxcontacts(assigned_user_id)Find contacts by RMproperties_status_idxproperties(status)Filter available propertiesproperties_location_idxproperties(city, country)Location-based searchmandates_expiry_idxmandates(expiry_date)Find expiring mandatesdeals_stage_idxdeals(stage)Pipeline filteringdeals_assigned_idxdeals(assigned_user_id)User deal lookupdeals_close_date_idxdeals(expected_close_date)Forecast queries6. Data Retention & Archival
+Data retention policies ensure optimal database performance while maintaining compliance:
+* Activity logs: 2 years (archive to cold storage after 1 year)
+* Audit trails: 7 years (regulatory requirement)
+* Deleted records: Soft delete with 90-day grace period
+* Session data: 30 days maximum
+* Analytics data: Indefinite retention in warehouse
+Murivest OS | Database Design
+________________________________________________________________________________
+
+Murivest OS | Confidential
+

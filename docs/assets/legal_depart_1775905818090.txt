@@ -1,0 +1,428 @@
+I also need a legal department that will help with the agreements and the lease strucutres and any other legal work that owuld be required for the commercial real estate or rea estate space for closing deals 
+
+give me a full documentation on what to add and what to add in every document and the user manual for legal Co.
+
+This can include the work done for the legal co. or the payments and onvoice that need to be approved to hem to pay them and other request they would need to be sent by either team or department e.g. acccounting or finance team to approve or followup of income and leases and property mgt team to check if there are lease expiries or other legal we might be open to including court cases, settlements payments, tracking everything to do with legal incolving our company in real estate.this includes due diligence on properties and approved and pending or awaiting due diligence on investors or properties. Give me all and every data requuired for a unified and seemless workflow for legal to be intergrated into our company and work together even as an outside firm
+
+Excellent — this is a high-level institutional move.
+
+What you are asking for is not just “a legal department” — you are building:
+
+⚖️ Murivest Legal Operations System (Legal OS Layer)
+
+An integrated internal + external legal engine that supports:
+
+deals
+mandates
+leases
+investor compliance
+litigation
+risk control
+payments to legal firms
+
+Below is the FULL DOCUMENTATION + USER MANUAL + SYSTEM DESIGN for Legal integrated into Murivest OS.
+
+📘 DOCUMENT: LEGAL DEPARTMENT & LEGAL SYSTEM SPECIFICATION
+
+Module Name: Legal & Compliance
+System Layer: Murivest OS (Integrated)
+Applies to: Internal Legal + External Legal Firm (“Legal Co.”)
+
+1. 🎯 PURPOSE OF LEGAL SYSTEM
+
+The Legal Module exists to:
+
+protect Murivest legally
+structure all transactions properly
+ensure enforceable agreements
+control risk exposure
+manage all documentation
+handle disputes and litigation
+support deal execution and investor trust
+2. 🧠 LEGAL SYSTEM ARCHITECTURE
+2.1 Legal as a Hybrid Model
+
+Murivest Legal operates as:
+
+A. Internal Legal Control Layer
+Legal Manager / Compliance Officer
+controls workflows
+approves/reviews documents
+interfaces with all departments
+B. External Legal Firm (“Legal Co.”)
+executes legal work
+drafts agreements
+handles court matters
+provides legal opinions
+
+👉 The system must treat Legal Co. as:
+
+external but integrated
+with controlled access via portal
+3. 🧩 LEGAL MODULE STRUCTURE
+
+The Legal System must include the following sub-modules:
+
+3.1 Legal Cases & Matters
+
+Tracks ALL legal work.
+
+Types:
+deal legal
+mandate structuring
+lease structuring
+due diligence
+investor compliance
+disputes
+litigation
+regulatory compliance
+Fields:
+case_id
+case_type
+related_entity (deal/property/investor/tenant)
+priority
+risk_level
+assigned_legal_firm
+assigned_internal_user
+status
+deadlines
+documents
+notes
+billing_status
+3.2 Contract & Agreement Management
+Types:
+ATS (Authority to Sell)
+SPA (Sale Purchase Agreement)
+Lease Agreements
+Joint Venture Agreements
+NDAs
+Investor Agreements
+Property Management Agreements
+Service Agreements
+Features:
+version control
+clause library
+approval workflow
+signature tracking
+expiry tracking
+3.3 Lease & Tenancy Legal System
+
+Tracks:
+
+lease terms
+rent structures
+escalations
+break clauses
+expiry dates
+legal disputes
+tenant defaults
+3.4 Due Diligence Engine
+For Properties:
+title verification
+ownership chain
+encumbrances
+zoning compliance
+lease structure validation
+For Investors:
+KYC
+AML
+source of funds
+regulatory compliance
+3.5 Data Room Legal Oversight
+controls document access
+approves what investors can see
+logs document downloads
+restricts sensitive files
+3.6 Litigation & Dispute Tracking
+
+Tracks:
+
+court cases
+disputes
+settlements
+legal risks
+timelines
+outcomes
+3.7 Legal Billing & Payments
+
+Tracks:
+
+invoices from Legal Co.
+billable hours
+case-based billing
+approvals
+payment status
+4. 🔄 LEGAL WORKFLOWS (FULL INTEGRATION)
+4.1 Deal Legal Workflow
+Trigger:
+
+Deal reaches negotiation stage
+
+Steps:
+legal case created
+documents requested
+SPA drafted
+clauses reviewed
+negotiation support
+final agreement approved
+execution & signing
+document archived
+4.2 Mandate Legal Workflow
+Trigger:
+
+Property onboarding
+
+Steps:
+ATS draft created
+ownership verified
+legal review
+clauses adjusted
+mandate signed
+validity tracked
+4.3 Lease Legal Workflow
+Trigger:
+
+Tenant onboarding or renewal
+
+Steps:
+lease drafted
+rent terms structured
+escalation clauses added
+legal approval
+tenant signature
+expiry tracking activated
+4.4 Due Diligence Workflow
+Trigger:
+
+Investor interest OR property listing
+
+Steps:
+DD checklist created
+documents collected
+legal verification
+risks flagged
+report generated
+approval / rejection
+4.5 Legal Request Workflow (Cross-Department)
+Trigger:
+
+Any department requests legal support
+
+Example requests:
+Sales → SPA drafting
+Marketing → disclaimer review
+Finance → contract review
+Property Mgmt → lease dispute
+Steps:
+request submitted
+case created
+assigned to legal
+SLA timer starts
+work executed
+output delivered
+case closed
+4.6 Legal Invoice Approval Workflow
+Steps:
+Legal Co. submits invoice
+case linked
+internal review
+finance approval
+executive approval (if high value)
+payment processed
+5. 🧾 LEGAL DATA STRUCTURE
+5.1 Legal Case Table
+case_id
+type
+linked_entity_id
+assigned_lawyer
+status
+risk_level
+created_at
+due_date
+billing_amount
+5.2 Contract Table
+contract_id
+type
+version
+status
+linked_entity
+expiry_date
+signed_date
+5.3 Lease Table
+lease_id
+tenant_id
+property_id
+start_date
+end_date
+rent
+escalation_terms
+legal_status
+5.4 Legal Billing Table
+invoice_id
+legal_case_id
+firm
+amount
+status
+approved_by
+6. 🧑‍⚖️ USER ROLES (LEGAL SYSTEM)
+Internal Legal Roles
+Legal Manager
+full legal oversight
+approvals
+risk management
+Legal Officer
+executes legal tasks
+reviews documents
+supports workflows
+External Legal Firm (Legal Co.)
+Access:
+assigned cases only
+document uploads
+invoice submission
+communication threads
+Cannot:
+see full CRM
+see financial dashboards
+access unrelated deals
+7. 🔐 LEGAL PERMISSIONS
+Legal Manager
+view all legal cases
+approve contracts
+approve DD
+approve access
+approve settlements
+Legal Officer
+view assigned cases
+edit documents
+upload files
+update status
+Legal Co. (External)
+view assigned cases
+upload deliverables
+submit invoices
+8. 📊 LEGAL DASHBOARD
+
+Must include:
+
+KPIs:
+active cases
+pending approvals
+due diligence status
+lease expiries
+disputes active
+legal costs
+risk level summary
+9. 🔔 AUTOMATIONS
+Alerts:
+lease expiring in 90/60/30 days
+mandate expiry
+pending DD
+overdue legal tasks
+unpaid legal invoices
+litigation deadlines
+Triggers:
+deal → legal auto-created
+investor onboarding → KYC request
+property onboarding → DD request
+10. 🧭 LEGAL USER MANUAL (SIMPLIFIED)
+For Internal Team
+When to use Legal:
+before signing anything
+when dealing with investors
+when handling property ownership
+during disputes
+during lease creation
+For Sales Team
+Create deal
+Click “Request Legal”
+Attach deal details
+Legal drafts agreement
+Review and proceed
+For Property Management
+Track lease expiry
+Trigger renewal
+Legal prepares lease
+Tenant signs
+Lease stored
+For Finance
+Receive legal invoice
+Match with case
+Approve
+Pay
+Record expense
+For Legal Co.
+Login to Legal Portal
+View assigned cases
+Upload documents
+Update status
+Submit invoice
+11. ⚠️ CRITICAL SYSTEM RULES
+Rule 1:
+
+NO deal closes without legal approval
+
+Rule 2:
+
+NO document goes public without legal review
+
+Rule 3:
+
+ALL legal documents must be version controlled
+
+Rule 4:
+
+ALL legal costs must be tied to a case
+
+Rule 5:
+
+ALL leases must be tracked centrally
+
+12. 🧠 ADVANCED FEATURES (HIGH VALUE)
+AI-Assisted Legal Review (Future)
+clause risk detection
+missing terms alerts
+compliance suggestions
+Legal Risk Scoring
+each deal/property gets risk score
+used in decision making
+Clause Library System
+standardized Murivest clauses
+reuse across contracts
+13. 🔗 HOW LEGAL CONNECTS TO EVERYTHING
+Department	Legal Interaction
+Sales	Deal contracts
+Marketing	compliance review
+Finance	legal billing
+Investors	KYC / NDA
+Property Mgmt	leases
+Operations	disputes
+Executive	risk oversight
+🔥 FINAL RESULT
+
+You now have:
+
+👉 A fully integrated Legal OS layer inside Murivest
+👉 Works with internal + external legal
+👉 Tracks EVERYTHING legal
+👉 Supports deals, leases, disputes, compliance
+👉 Fully connected to finance, sales, and operations
+
+🚀 NEXT STEP (VERY IMPORTANT)
+
+You now need:
+
+👉 Legal UI Screen (Dashboard + Case View + Contract Builder)
+
+Say:
+
+“Generate Legal Dashboard UI”
+
+And I will design:
+
+full legal interface
+case tracking screen
+contract builder UI
+lease tracking panel
+litigation tracker
+
+This will complete your Legal OS visually.

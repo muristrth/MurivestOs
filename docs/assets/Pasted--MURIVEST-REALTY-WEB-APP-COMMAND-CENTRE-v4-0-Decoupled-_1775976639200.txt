@@ -1,0 +1,753 @@
+/**
+ * MURIVEST REALTY - WEB APP COMMAND CENTRE v4.0
+ * Decoupled Architecture + Standalone Web Deployment
+ */
+
+const CONFIG = {
+  firmName: "Murivest Realty Group",
+  email: Session.getActiveUser().getEmail(),
+  sheets: {
+    dashboard: "00_DASHBOARD",
+    mandates: "01_MANDATES",
+    flagship: "01_FIRST_FLAGSHIP",
+    pipeline: "02_PIPELINE",
+    capital: "03_CAPITAL",
+    log: "04_DAILY_LOG",
+    traffic: "05_90_DAY_TRAFFIC",
+    backend: "99_BACKEND",
+    analytics: "98_ANALYTICS"
+  }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// WEB APP DEPLOYMENT ENGINE (Required for URL Access)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function doGet(e) {
+  const htmlTemplate = HtmlService.createTemplateFromFile('AdvancedTerminal');
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const backSheet = ss.getSheetByName(CONFIG.sheets.backend);
+  
+  htmlTemplate.stats = {
+    activeDeals: countActiveDeals(),
+    totalPipeline: calculateWeightedAUM(),
+    momentum: calculate7DayMomentum()
+  };
+  
+  // Safe fallback arrays if backend is missing or empty
+  let activities = ["Cold Outreach", "Underwriting Model", "Site Tour", "LOI Drafted", "Closing Documentation"];
+  let stages = ["Origination", "Initial Underwriting", "Site Tour", "LOI Submitted", "Due Diligence", "Closed", "Dead"];
+  let tiers = ["Tier 1", "Tier 2", "Tier 3"];
+  let statuses = ["Not Started", "In Progress", "Blocked", "Done"];
+  
+  if (backSheet) {
+    try { activities = backSheet.getRange("C2:C20").getValues().flat().filter(String); } catch(err) {}
+    try { stages = backSheet.getRange("A2:A15").getValues().flat().filter(String); } catch(err) {}
+    try { tiers = backSheet.getRange("D2:D10").getValues().flat().filter(String); } catch(err) {}
+    try { statuses = backSheet.getRange("F2:F5").getValues().flat().filter(String); } catch(err) {}
+  }
+  
+  htmlTemplate.dropdowns = {
+    activities: activities,
+    stages: stages,
+    tiers: tiers,
+    statuses: statuses,
+    assetTypes: ["Office", "Retail", "Industrial", "Residential", "Mixed-Use", "Land", "Hospitality"],
+    mandateTypes: ["Exclusive", "Non-Exclusive", "Open Listing", "Co-Broker"]
+  };
+  
+  return htmlTemplate.evaluate()
+    .setTitle("Murivest Command Terminal")
+    .addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SPREADSHEET MENU (For when you are inside the sheet)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function onOpen() {
+  const ui = SpreadsheetApp.getUi();
+  ui.createMenu("🔹 MURIVEST COMMAND")
+    .addItem("🚀 Launch Command Terminal", "openCommandTerminalFromSheet")
+    .addSeparator()
+    .addSubMenu(ui.createMenu("📊 Intelligence Reports")
+      .addItem("Generate Executive Board Brief", "generateExecutiveBoardBrief")
+      .addItem("Portfolio Health Audit", "auditPortfolioHealth")
+      .addItem("Mandate Status Report", "generateMandateReport"))
+    .addSubMenu(ui.createMenu("⚡ Quick Actions")
+      .addItem("Audit Capital Timelines", "auditCapitalTimelines")
+      .addItem("Check Mandate Expiries", "checkMandateExpirations")
+      .addItem("Export Pipeline CSV", "exportPipelineSummary")
+      .addItem("Send Daily Brief", "sendDailyBrief"))
+    .addSubMenu(ui.createMenu("🔧 System")
+      .addItem("Initialize Analytics", "initializeAnalytics")
+      .addItem("Backup All Data", "backupAllData"))
+    .addToUi();
+}
+
+function openCommandTerminalFromSheet() {
+  // Renders the exact same HTML template as the Web App, but inside a modal dialog
+  const htmlOutput = doGet().setWidth(700).setHeight(800);
+  SpreadsheetApp.getUi().showModalDialog(htmlOutput, " ");
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// BACKGROUND CALCULATORS (For Terminal UI & Reports)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function calculateTodayScore() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.log);
+  if(!sheet) return 0;
+  const data = sheet.getDataRange().getValues();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  let score = 0;
+  
+  for (let i = 1; i < data.length; i++) {
+    const logDate = new Date(data[i][0]);
+    logDate.setHours(0,0,0,0);
+    if (logDate.getTime() === today.getTime()) {
+      score += parseFloat(data[i][7]) || parseFloat(data[i][4]) || 0; 
+    }
+  }
+  return score;
+}
+
+function calculate7DayMomentum() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.log);
+  if(!sheet) return 0;
+  const data = sheet.getDataRange().getValues();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - 7);
+  let score = 0;
+  
+  for (let i = 1; i < data.length; i++) {
+    const logDate = new Date(data[i][0]);
+    if (logDate >= cutoff) {
+      score += parseFloat(data[i][7]) || parseFloat(data[i][4]) || 0;
+    }
+  }
+  return score;
+}
+
+function checkBottlenecks() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.flagship);
+  if(!sheet) return "No Blockers";
+  const data = sheet.getDataRange().getValues();
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][2] === "Blocked") return "🔴 BLOCKED: " + data[i][0];
+  }
+  return "No Blockers";
+}
+
+function countActiveDeals() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.pipeline);
+  if (!sheet) return 0;
+  const stages = sheet.getRange("D2:D" + sheet.getLastRow()).getValues();
+  let activeCount = 0;
+  
+  for (let i = 0; i < stages.length; i++) {
+    let currentStage = stages[i][0];
+    if (currentStage !== "" && currentStage !== "Closed" && currentStage !== "Dead") {
+      activeCount++;
+    }
+  }
+  return activeCount;
+}
+
+function calculateWeightedAUM() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.pipeline);
+  if(!sheet) return 0;
+  const data = sheet.getDataRange().getValues();
+  let total = 0;
+  for (let i = 1; i < data.length; i++) {
+    const stage = data[i][3];
+    if (stage !== "Closed" && stage !== "Dead") {
+      total += (parseFloat(data[i][2]) || 0) * (parseFloat(data[i][4]) || 0);
+    }
+  }
+  return total;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// DATA PROCESSORS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function getTrueLastRow(sheet, colIndex) {
+  if (!colIndex) colIndex = 1;
+  const colData = sheet.getRange(1, colIndex, sheet.getMaxRows(), 1).getValues();
+  for (let i = colData.length - 1; i >= 0; i--) {
+    if (colData[i][0] !== "" && colData[i][0] !== null) {
+      return i + 1;
+    }
+  }
+  return 1;
+}
+
+function processTrafficLog(data) {
+  try {
+    if (!data.name || !data.phone || !data.property) {
+      throw new Error("Name, Phone, and Property are mandatory for site traffic.");
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.sheets.traffic);
+    if (!sheet) throw new Error("05_90_DAY_TRAFFIC sheet not found.");
+    
+    const row = getTrueLastRow(sheet, 1) + 1; 
+    
+    // Explicitly writes directly to Columns A through H including Estate and Email
+    sheet.getRange(row, 1, 1, 8).setValues([[
+      data.name,
+      data.company || "",
+      data.estate || "",
+      "'" + data.phone, // Adds an apostrophe to prevent Sheets from deleting the leading zero
+      data.email || "",
+      data.dateVisited ? new Date(data.dateVisited) : new Date(),
+      data.property,
+      data.status || "Warm"
+    ]]);
+    
+    return { success: true, message: "Prospect " + data.name + " locked in." };
+    
+  } catch (e) {
+    return { success: false, message: "Error: " + e.toString() };
+  }
+}
+
+function processDailyLog(data) {
+  try {
+    if (!data.activity || !data.counterparty || !data.outcome) {
+      throw new Error("Missing required fields");
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.sheets.log);
+    const row = getTrueLastRow(sheet, 1) + 1;
+    const timestamp = new Date();
+    
+    const backSheet = ss.getSheetByName(CONFIG.sheets.backend);
+    let weight = 1;
+    if (backSheet) {
+      const backendData = backSheet.getDataRange().getValues();
+      for (let i = 1; i < backendData.length; i++) {
+        if (backendData[i][2] === data.activity) {
+          weight = parseFloat(backendData[i][3]) || 1;
+          break;
+        }
+      }
+    }
+    
+    const impactMultiplier = data.impact === "High" ? 2 : data.impact === "Low" ? 0.5 : 1;
+    const finalWeight = weight * impactMultiplier;
+    
+    // Write to 8 columns mapping perfectly to your execution ledger
+    sheet.getRange(row, 1, 1, 8).setValues([[
+      timestamp,           
+      data.activity,       
+      data.counterparty,   
+      data.outcome,        
+      weight,              
+      data.followUp || "", 
+      data.impact || "",   
+      finalWeight          
+    ]]);
+    
+    return { success: true, message: "Logged: " + finalWeight + " points" };
+    
+  } catch (e) {
+    return { success: false, message: "Error: " + e.toString() };
+  }
+}
+
+function processFlagshipTask(data) {
+  try {
+    if (!data.asset || !data.task || !data.status || !data.owner || !data.deadline) {
+      throw new Error("Missing required fields");
+    }
+    
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.flagship);
+    const row = getTrueLastRow(sheet, 1) + 1;
+    
+    sheet.getRange(row, 1, 1, 8).setValues([[
+      data.asset,
+      data.task,
+      data.status,
+      new Date(),
+      "", // Days Active formula
+      "", // Velocity Health formula
+      data.owner,
+      data.deadline
+    ]]);
+    
+    sheet.getRange(row, 5).setFormula('=IF(D' + row + '="","",TODAY()-D' + row + ')');
+    sheet.getRange(row, 6).setFormula('=IF(C' + row + '="Done","✅ Closed Out",IF(E' + row + '<7,"🟢 Accelerating",IF(E' + row + '<14,"🟡 Stalling","🔴 Critical Risk")))');
+    
+    return { success: true, message: "Flagship task added" };
+    
+  } catch (e) {
+    return { success: false, message: "Error: " + e.toString() };
+  }
+}
+
+function processPipelineDeal(data) {
+  try {
+    if (!data.asset || !data.market || !data.size || !data.stage || !data.fee || !data.nextAction) {
+      throw new Error("Missing required fields");
+    }
+    
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.sheets.pipeline);
+    const row = getTrueLastRow(sheet, 1) + 1;
+    
+    const backSheet = ss.getSheetByName(CONFIG.sheets.backend);
+    let probability = 0.05;
+    if (backSheet) {
+      const backendData = backSheet.getDataRange().getValues();
+      for (let i = 1; i < backendData.length; i++) {
+        if (backendData[i][0] === data.stage) {
+          const prob = parseFloat(backendData[i][1]);
+          if (!isNaN(prob)) probability = prob;
+          break;
+        }
+      }
+    }
+    
+    const grossFee = data.size * data.fee;
+    const riskAdjusted = grossFee * probability;
+    
+    sheet.getRange(row, 1, 1, 9).setValues([[
+      data.asset,
+      data.market,
+      data.size,
+      data.stage,
+      probability,
+      data.fee,
+      grossFee,
+      riskAdjusted,
+      data.nextAction
+    ]]);
+    
+    return { success: true, message: "Deal added to pipeline" };
+    
+  } catch (e) {
+    return { success: false, message: "Error: " + e.toString() };
+  }
+}
+
+function processCapitalPartner(data) {
+  try {
+    if (!data.entity || !data.tier || !data.mandate || !data.deployment || !data.probability || !data.touchpoint) {
+      throw new Error("Missing required fields");
+    }
+    
+    const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.capital);
+    const row = getTrueLastRow(sheet, 1) + 1;
+    const weighted = data.deployment * data.probability;
+    
+    sheet.getRange(row, 1, 1, 7).setValues([[
+      data.entity,
+      data.tier,
+      data.mandate,
+      data.deployment,
+      data.probability,
+      weighted,
+      data.touchpoint
+    ]]);
+    
+    return { success: true, message: "Capital partner logged" };
+    
+  } catch (e) {
+    return { success: false, message: "Error: " + e.toString() };
+  }
+}
+
+function processMandate(data) {
+  try {
+    const requiredFields = {
+      assetName: data.assetName,
+      assetType: data.assetType,
+      location: data.location,
+      providerName: data.providerName,
+      mandateType: data.mandateType,
+      startDate: data.startDate,
+      expiryDate: data.expiryDate,
+      askingPrice: data.askingPrice,
+      feePercent: data.feePercent,
+      broker: data.broker
+    };
+
+    const missing = Object.entries(requiredFields)
+      .filter(([key, val]) => val === undefined || val === null || val === "")
+      .map(([key]) => key);
+
+    if (missing.length > 0) {
+      throw new Error("Missing required fields: " + missing.join(", "));
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(CONFIG.sheets.mandates);
+    if (!sheet) throw new Error("Mandates sheet not found");
+    
+    const tz = ss.getSpreadsheetTimeZone();
+    const row = getTrueLastRow(sheet, 1) + 1;
+    const mandateId = "MND-" + Utilities.formatDate(new Date(), tz, "yyyyMMdd-HHmmss");
+    const grossFee = data.askingPrice * data.feePercent;
+    
+    sheet.getRange(row, 1, 1, 18).setValues([[ 
+      mandateId,
+      data.assetName,
+      data.assetType,
+      data.location,
+      data.source || "",
+      data.providerName,
+      data.mandateType,
+      new Date(data.startDate),
+      new Date(data.expiryDate),
+      "Active",
+      data.askingPrice,
+      data.feePercent,
+      grossFee,
+      "Yes",
+      data.broker,
+      new Date(),
+      data.notes || "",
+      new Date()
+    ]]);
+    
+    return { success: true, message: "Mandate " + mandateId + " created" };
+    
+  } catch (e) {
+    return { success: false, message: "Error: " + e.toString() };
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ANALYTICS & BOARD REPORTING
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function logToAnalytics(timestamp, activity, weight) {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG.sheets.analytics);
+  
+  if (!sheet) {
+    sheet = ss.insertSheet(CONFIG.sheets.analytics);
+    sheet.appendRow(["Date", "Activity", "Weight", "Week", "Month", "Year", "DayOfWeek"]);
+    sheet.hideSheet();
+  }
+  
+  const week = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyy-'W'ww");
+  const month = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyy-MM");
+  const year = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "yyyy");
+  const dayOfWeek = Utilities.formatDate(timestamp, Session.getScriptTimeZone(), "EEE");
+  
+  sheet.appendRow([timestamp, activity, weight, week, month, year, dayOfWeek]);
+}
+
+function initializeAnalytics() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(CONFIG.sheets.analytics);
+  
+  if (sheet) ss.deleteSheet(sheet);
+  
+  sheet = ss.insertSheet(CONFIG.sheets.analytics);
+  sheet.appendRow(["Date", "Activity", "Weight", "Week", "Month", "Year", "DayOfWeek"]);
+  sheet.hideSheet();
+  
+  const logSheet = ss.getSheetByName(CONFIG.sheets.log);
+  if (logSheet) {
+    const logData = logSheet.getDataRange().getValues();
+    for (let i = 1; i < logData.length; i++) {
+      if (logData[i][0]) {
+        logToAnalytics(new Date(logData[i][0]), logData[i][1], logData[i][4] || 1);
+      }
+    }
+  }
+  
+  SpreadsheetApp.getUi().alert("Analytics initialized with historical data");
+}
+
+function generateExecutiveBoardBrief() {
+  const report = compileComprehensiveReport();
+  const htmlBody = createExecutiveReportHTML(report);
+  
+  MailApp.sendEmail({
+    to: CONFIG.email,
+    subject: "📊 Murivest Executive Board Brief - " + Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "MMMM yyyy"),
+    htmlBody: htmlBody,
+    name: "Murivest Command Centre"
+  });
+  
+  SpreadsheetApp.getUi().alert("✅ Executive Brief transmitted to board");
+}
+
+function compileComprehensiveReport() {
+  return {
+    generatedAt: new Date(),
+    executiveSummary: {
+      status: calculateOverallHealth(),
+      pipelineValue: calculateWeightedAUM(),
+      activeMandates: countActiveMandates(),
+      capitalCommitted: calculateCapitalDeployed(),
+      momentum: calculate7DayMomentum()
+    }
+  };
+}
+
+function calculateOverallHealth() {
+  const momentum = calculate7DayMomentum();
+  const pipeline = calculateWeightedAUM();
+  if (momentum > 100 && pipeline > 10000000) return "STRONG";
+  if (momentum > 50 && pipeline > 5000000) return "STABLE";
+  if (momentum > 20) return "DEVELOPING";
+  return "ATTENTION REQUIRED";
+}
+
+function countActiveMandates() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.mandates);
+  return Math.max(0, sheet.getDataRange().getNumRows() - 1);
+}
+
+function calculateCapitalDeployed() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.capital);
+  const data = sheet.getDataRange().getValues();
+  let total = 0;
+  for (let i = 1; i < data.length; i++) {
+    total += parseFloat(data[i][5]) || 0;
+  }
+  return total;
+}
+
+function createExecutiveReportHTML(report) {
+  const formatCurrency = (val) => {
+    if (!val) return "$0";
+    if (val >= 1000000) return "$" + (val/1000000).toFixed(1) + "M";
+    if (val >= 1000) return "$" + (val/1000).toFixed(0) + "K";
+    return "$" + val;
+  };
+  
+  const statusColor = {
+    "STRONG": "#10B981",
+    "STABLE": "#3B82F6",
+    "DEVELOPING": "#F59E0B",
+    "ATTENTION REQUIRED": "#EF4444"
+  };
+  
+  return `<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+      body { font-family: 'Inter', sans-serif; background: #0A1128; color: #F8FAFC; padding: 40px 20px; margin: 0; }
+      .container { max-width: 800px; margin: 0 auto; background: rgba(255,255,255,0.05); border-radius: 24px; padding: 40px; border: 1px solid rgba(255,255,255,0.1); }
+      .header { text-align: center; border-bottom: 2px solid rgba(59,130,246,0.5); padding-bottom: 30px; margin-bottom: 40px; }
+      .logo { font-size: 32px; font-weight: 700; letter-spacing: 4px; background: linear-gradient(135deg, #3B82F6, #60A5FA); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+      .subtitle { font-size: 12px; text-transform: uppercase; letter-spacing: 6px; color: #94A3B8; font-weight: 500; }
+      .status-badge { display: inline-block; padding: 8px 24px; border-radius: 50px; font-size: 14px; font-weight: 600; margin-top: 20px; background: ${statusColor[report.executiveSummary.status]}20; color: ${statusColor[report.executiveSummary.status]}; border: 1px solid ${statusColor[report.executiveSummary.status]}; }
+      .section { margin: 40px 0; background: rgba(255,255,255,0.03); border-radius: 16px; padding: 30px; border: 1px solid rgba(255,255,255,0.05); }
+      .section-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; color: #60A5FA; }
+      .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; }
+      .metric-card { background: rgba(255,255,255,0.05); padding: 24px; border-radius: 12px; border-left: 4px solid #3B82F6; }
+      .metric-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: #94A3B8; margin-bottom: 8px; }
+      .metric-value { font-size: 28px; font-weight: 700; color: #F8FAFC; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <div class="logo">MURIVEST REALTY</div>
+        <div class="subtitle">Executive Command Summary</div>
+        <div style="margin-top: 10px; color: #94A3B8; font-size: 14px;">${Utilities.formatDate(report.generatedAt, Session.getScriptTimeZone(), "MMMM dd, yyyy")}</div>
+        <div class="status-badge">${report.executiveSummary.status}</div>
+      </div>
+      
+      <div class="section">
+        <div class="section-title">📊 Key Metrics</div>
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <div class="metric-label">Pipeline Value</div>
+            <div class="metric-value">${formatCurrency(report.executiveSummary.pipelineValue)}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Active Mandates</div>
+            <div class="metric-value">${report.executiveSummary.activeMandates}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">Capital Committed</div>
+            <div class="metric-value">${formatCurrency(report.executiveSummary.capitalCommitted)}</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-label">7-Day Momentum</div>
+            <div class="metric-value">${report.executiveSummary.momentum}</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer" style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 12px; color: #64748B;">
+        <p>Generated by Murivest Command Centre v4.0</p>
+      </div>
+    </div>
+  </body>
+  </html>`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ALERTS & UTILITIES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function auditCapitalTimelines() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.capital);
+  const data = sheet.getDataRange().getValues();
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const breaches = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    const touchpoint = new Date(data[i][6]);
+    if (touchpoint < today) {
+      breaches.push({
+        entity: data[i][0],
+        daysOverdue: Math.floor((today - touchpoint) / (1000 * 60 * 60 * 24))
+      });
+    }
+  }
+  
+  if (breaches.length > 0) {
+    const html = `<div style="font-family: Arial; max-width: 600px; margin: auto; background: #0A1128; color: white; padding: 30px; border-radius: 12px;">
+      <h2 style="color: #EF4444;">⚠️ Capital Timeline Alert</h2>
+      <ul>${breaches.map(b => `<li style="margin: 10px 0; padding: 10px; background: rgba(239,68,68,0.1); border-left: 4px solid #EF4444;"><strong>${b.entity}</strong><br><span style="color: #F87171;">${b.daysOverdue} days overdue</span></li>`).join("")}</ul>
+    </div>`;
+    
+    MailApp.sendEmail({
+      to: CONFIG.email,
+      subject: "⚠️ MURIVEST ALERT: Capital Allocation Risk",
+      htmlBody: html
+    });
+    
+    SpreadsheetApp.getUi().alert("⚠️ Capital timeline breaches detected and reported");
+  } else {
+    SpreadsheetApp.getUi().alert("✅ All capital timelines on track");
+  }
+}
+
+function checkMandateExpirations() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.mandates);
+  const data = sheet.getDataRange().getValues();
+  const today = new Date();
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() + 30);
+  const expiring = [];
+  
+  for (let i = 1; i < data.length; i++) {
+    const expiry = new Date(data[i][8]);
+    if (expiry > today && expiry <= cutoff) {
+      expiring.push({ asset: data[i][1], date: Utilities.formatDate(expiry, Session.getScriptTimeZone(), "MMM dd, yyyy") });
+    }
+  }
+  
+  if (expiring.length > 0) {
+    MailApp.sendEmail({
+      to: CONFIG.email,
+      subject: "📋 Mandate Expiration Notice",
+      htmlBody: `<div style="font-family: Arial; padding: 20px;"><h3>Mandates Expiring Within 30 Days</h3><ul>${expiring.map(m => `<li><strong>${m.asset}</strong> - Expires: ${m.date}</li>`).join("")}</ul></div>`
+    });
+  }
+  
+  SpreadsheetApp.getUi().alert(`Found ${expiring.length} mandates expiring within 30 days`);
+}
+
+function sendDailyBrief() {
+  const today = new Date();
+  const score = calculateTodayScore();
+  const momentum = calculate7DayMomentum();
+  
+  const html = `<div style="font-family: Arial; max-width: 600px; margin: auto; padding: 20px;">
+    <h2>Murivest Daily Brief - ${Utilities.formatDate(today, Session.getScriptTimeZone(), "MMM dd")}</h2>
+    <p><strong>Today's Execution Score:</strong> ${score}</p>
+    <p><strong>7-Day Momentum:</strong> ${momentum}</p>
+    <p><strong>Status:</strong> ${checkBottlenecks()}</p>
+  </div>`;
+  
+  MailApp.sendEmail({
+    to: CONFIG.email,
+    subject: "Murivest Daily Brief - " + Utilities.formatDate(today, Session.getScriptTimeZone(), "MMM dd"),
+    htmlBody: html
+  });
+  
+  SpreadsheetApp.getUi().alert("✅ Daily brief sent");
+}
+
+function exportPipelineSummary() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.pipeline);
+  const csv = sheet.getDataRange().getValues().map(row => row.join(",")).join("\n");
+  const blob = Utilities.newBlob(csv, MimeType.CSV, "Pipeline_Export.csv");
+  const file = DriveApp.createFile(blob);
+  
+  MailApp.sendEmail({
+    to: CONFIG.email,
+    subject: "Pipeline Export",
+    body: "Your pipeline export is attached.",
+    attachments: [file.getAs(MimeType.CSV)]
+  });
+  
+  SpreadsheetApp.getUi().alert("✅ Pipeline exported and emailed");
+}
+
+function backupAllData() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const timestamp = Utilities.formatDate(new Date(), Session.getScriptTimeZone(), "yyyy-MM-dd_HH-mm");
+  const folder = DriveApp.createFolder("Murivest_Backup_" + timestamp);
+  
+  Object.values(CONFIG.sheets).forEach(sheetName => {
+    const sheet = ss.getSheetByName(sheetName);
+    if (sheet) {
+      const csv = sheet.getDataRange().getValues().map(row => row.join(",")).join("\n");
+      folder.createFile(sheetName + ".csv", csv, MimeType.CSV);
+    }
+  });
+  
+  SpreadsheetApp.getUi().alert("✅ Backup created: " + folder.getName());
+}
+
+function auditPortfolioHealth() {
+  const issues = [];
+  const pipeSheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.pipeline);
+  const pipeData = pipeSheet.getDataRange().getValues();
+  let stalledDeals = 0;
+  
+  for (let i = 1; i < pipeData.length; i++) {
+    if (pipeData[i][3] === "DD" && !pipeData[i][8]) stalledDeals++;
+  }
+  if (stalledDeals > 0) issues.push(`${stalledDeals} deals in DD without next actions`);
+  
+  if (calculate7DayMomentum() < 20) issues.push("Activity momentum below threshold");
+  
+  const message = issues.length ? "⚠️ Health Audit Issues:\n\n" + issues.join("\n") : "✅ Portfolio health check passed";
+  SpreadsheetApp.getUi().alert(message);
+}
+
+function generateMandateReport() {
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(CONFIG.sheets.mandates);
+  const data = sheet.getDataRange().getValues();
+  let html = "<h2>Mandate Status Report</h2><table border='1' style='border-collapse: collapse; width: 100%;'>";
+  html += "<tr style='background: #0A1128; color: white;'><th>Asset</th><th>Type</th><th>Value</th><th>Status</th><th>Expiry</th></tr>";
+  
+  for (let i = 1; i < data.length; i++) {
+    html += `<tr><td>${data[i][1]}</td><td>${data[i][2]}</td><td>${data[i][10]}</td><td>${data[i][9]}</td><td>${Utilities.formatDate(new Date(data[i][8]), Session.getScriptTimeZone(), "MMM dd")}</td></tr>`;
+  }
+  html += "</table>";
+  
+  MailApp.sendEmail({
+    to: CONFIG.email,
+    subject: "📋 Mandate Status Report",
+    htmlBody: html
+  });
+  
+  SpreadsheetApp.getUi().alert("✅ Mandate report sent");
+}
+
+function generateMonthlyReport() {
+  generateExecutiveBoardBrief();
+}

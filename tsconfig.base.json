@@ -1,0 +1,39 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+
+    "isolatedModules": true,
+    "noEmit": true,
+    "noEmitOnError": true,
+
+    "strict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "strictNullChecks": true,
+    "strictBindCallApply": true,
+    "strictPropertyInitialization": true,
+    "useUnknownInCatchVariables": true,
+    "alwaysStrict": true,
+
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
+    "noUnusedLocals": false,
+    "noImplicitOverride": false,
+    "strictFunctionTypes": false,
+
+    "skipLibCheck": true,
+    "types": [],
+    "customConditions": ["workspace"],
+
+    "paths": {
+      "@murivest/db": ["packages/db/src"],
+      "@murivest/api-client": ["packages/api-client-react/src"],
+      "@murivest/api-zod": ["packages/api-zod/src"],
+      "@murivest/api-spec": ["packages/api-spec/src"]
+    }
+  }
+}

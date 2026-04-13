@@ -1,0 +1,1257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Murivest — Operations Terminal</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── DESIGN TOKENS ──────────────────────────────────────────────── */
+    :root {
+      --ink:        #1A1A1A;
+      --ink-mid:    #4A4A4A;
+      --ink-light:  #8A8A8A;
+      --rule:       #E0DDD8;
+      --rule-light: #EDEBE7;
+      --cream:      #F9F7F4;
+      --cream-dark: #F1EEE9;
+      --gold:       #8B7355;
+      --gold-light: #C4B59D;
+      --white:      #FFFFFF;
+      --success:    #2D6A4F;
+      --warning:    #92400E;
+      --danger:     #7F1D1D;
+      --info:       #1E3A5F;
+
+      --font-display: 'Cormorant Garamond', Georgia, serif;
+      --font-body:    'DM Sans', system-ui, sans-serif;
+
+      --radius-sm:  2px;
+      --radius:     4px;
+      --shadow-sm:  0 1px 3px rgba(0,0,0,0.06);
+      --shadow:     0 4px 16px rgba(0,0,0,0.08);
+      --shadow-lg:  0 8px 32px rgba(0,0,0,0.12);
+
+      --transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* ─── RESET ──────────────────────────────────────────────────────── */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { font-size: 15px; -webkit-text-size-adjust: 100%; }
+
+    body {
+      font-family: var(--font-body);
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── MASTHEAD ───────────────────────────────────────────────────── */
+    .masthead {
+      background: var(--ink);
+      color: var(--white);
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 56px;
+      border-bottom: 1px solid #2C2C2C;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .masthead-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .firm-wordmark {
+      font-family: var(--font-display);
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: var(--white);
+      text-transform: uppercase;
+    }
+
+    .masthead-divider {
+      width: 1px;
+      height: 18px;
+      background: #333;
+    }
+
+    .masthead-subtitle {
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--gold-light);
+      font-weight: 500;
+    }
+
+    .version-tag {
+      font-size: 10px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #666;
+      font-weight: 500;
+    }
+
+    /* ─── STATS RAIL ─────────────────────────────────────────────────── */
+    .stats-rail {
+      background: var(--white);
+      border-bottom: 1px solid var(--rule);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .stat-cell {
+      padding: 16px 20px;
+      border-right: 1px solid var(--rule);
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .stat-cell:last-child { border-right: none; }
+    .stat-cell:hover { background: var(--cream); }
+
+    .stat-num {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 500;
+      color: var(--ink);
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+
+    .stat-lbl {
+      font-size: 9px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    /* ─── NAV ────────────────────────────────────────────────────────── */
+    .nav-bar {
+      background: var(--white);
+      border-bottom: 1px solid var(--rule);
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .nav-bar::-webkit-scrollbar { display: none; }
+
+    .nav-inner {
+      display: flex;
+      padding: 0 20px;
+      min-width: max-content;
+    }
+
+    .nav-tab {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 14px 18px;
+      border: none;
+      background: transparent;
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: var(--transition);
+      white-space: nowrap;
+      margin-bottom: -1px;
+    }
+
+    .nav-tab svg { width: 13px; height: 13px; flex-shrink: 0; }
+    .nav-tab:hover { color: var(--ink); }
+
+    .nav-tab.active {
+      color: var(--ink);
+      border-bottom-color: var(--gold);
+    }
+
+    /* ─── LAYOUT ─────────────────────────────────────────────────────── */
+    .page-body {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+
+    /* ─── PANEL HEADER ───────────────────────────────────────────────── */
+    .panel {
+      display: none;
+      animation: fadeUp 0.28s ease forwards;
+    }
+
+    .panel.active { display: block; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .panel-head { margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--rule); }
+
+    .panel-title {
+      font-family: var(--font-display);
+      font-size: 26px;
+      font-weight: 500;
+      color: var(--ink);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .panel-title svg { width: 18px; height: 18px; color: var(--gold); flex-shrink: 0; }
+
+    .panel-desc {
+      font-size: 12px;
+      color: var(--ink-light);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── FORM ELEMENTS ──────────────────────────────────────────────── */
+    .field { margin-bottom: 18px; }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .field-row { grid-template-columns: 1fr; }
+    }
+
+    label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--ink-mid);
+      margin-bottom: 7px;
+    }
+
+    label.req::after {
+      content: ' *';
+      color: var(--gold);
+    }
+
+    .input-wrap { position: relative; }
+
+    .input-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--gold-light);
+      pointer-events: none;
+    }
+
+    .input-icon svg { width: 14px; height: 14px; display: block; }
+
+    input,
+    select,
+    textarea {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 13.5px;
+      color: var(--ink);
+      background: var(--white);
+      transition: var(--transition);
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    input.has-icon,
+    select.has-icon { padding-left: 38px; }
+
+    input:focus,
+    select:focus,
+    textarea:focus {
+      outline: none;
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(139,115,85,0.1);
+    }
+
+    input::placeholder,
+    textarea::placeholder { color: var(--ink-light); font-size: 13px; }
+
+    input[type="date"] { cursor: pointer; }
+
+    select {
+      cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%238A8A8A' d='M5 6L0 0h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 90px;
+      line-height: 1.6;
+    }
+
+    .helper {
+      font-size: 11px;
+      color: var(--ink-light);
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .helper svg { width: 11px; height: 11px; flex-shrink: 0; }
+
+    /* ─── IMPACT SELECTOR ────────────────────────────────────────────── */
+    .impact-group {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+
+    .impact-opt {
+      flex: 1;
+      padding: 9px 8px;
+      border: 1px solid var(--rule);
+      border-radius: var(--radius-sm);
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition);
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      user-select: none;
+    }
+
+    .impact-opt:hover { border-color: var(--gold-light); color: var(--ink); }
+
+    .impact-opt.sel[data-p="High"]   { border-color: #7F1D1D; background: rgba(127,29,29,0.06);   color: #7F1D1D; }
+    .impact-opt.sel[data-p="Medium"] { border-color: #92400E; background: rgba(146,64,14,0.06);   color: #92400E; }
+    .impact-opt.sel[data-p="Low"]    { border-color: #2D6A4F; background: rgba(45,106,79,0.06);   color: #2D6A4F; }
+
+    /* ─── STATUS BADGES (traffic) ────────────────────────────────────── */
+    .status-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin-top: 6px;
+    }
+
+    .status-opt {
+      padding: 7px 14px;
+      border: 1px solid var(--rule);
+      border-radius: 100px;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      transition: var(--transition);
+      user-select: none;
+      white-space: nowrap;
+    }
+
+    .status-opt:hover { border-color: var(--gold-light); }
+    .status-opt.sel { border-color: var(--gold); background: var(--gold); color: var(--white); }
+
+    /* ─── SUBMIT BUTTON ──────────────────────────────────────────────── */
+    .submit-btn {
+      width: 100%;
+      padding: 14px 24px;
+      background: var(--ink);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition);
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .submit-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gold);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .submit-btn:hover::before { transform: scaleX(1); }
+    .submit-btn span, .submit-btn svg { position: relative; z-index: 1; }
+
+    .submit-btn:hover { box-shadow: var(--shadow); }
+    .submit-btn:active { transform: scale(0.99); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .submit-btn svg { width: 14px; height: 14px; }
+
+    /* ─── DIVIDER ─────────────────────────────────────────────────────── */
+    .form-divider {
+      height: 1px;
+      background: var(--rule-light);
+      margin: 22px 0;
+    }
+
+    /* ─── LOADER OVERLAY ──────────────────────────────────────────────── */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(249,247,244,0.92);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 200;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    .overlay.show { display: flex; }
+
+    .spinner-ring {
+      width: 44px;
+      height: 44px;
+      border: 2px solid var(--rule);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .check-circle {
+      display: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--success);
+      align-items: center;
+      justify-content: center;
+      animation: pop 0.25s ease;
+    }
+
+    .check-circle svg { width: 22px; height: 22px; color: white; }
+
+    @keyframes pop {
+      from { transform: scale(0.6); opacity: 0; }
+      to   { transform: scale(1);   opacity: 1; }
+    }
+
+    .overlay-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      color: var(--ink);
+      font-weight: 500;
+    }
+
+    .overlay-sub {
+      font-size: 12px;
+      color: var(--ink-light);
+      letter-spacing: 0.05em;
+    }
+
+    /* ─── RESPONSIVE PATCHES ─────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      .masthead-subtitle { display: none; }
+      .masthead-divider  { display: none; }
+      .stat-num          { font-size: 22px; }
+      .stat-cell         { padding: 12px 10px; }
+      .page-body         { padding: 20px 16px 60px; }
+      .panel-title       { font-size: 22px; }
+    }
+
+    @media (min-width: 768px) {
+      .page-body     { padding: 36px 24px 80px; }
+      .stat-cell     { padding: 20px 24px; }
+      .stat-num      { font-size: 32px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── MASTHEAD ─────────────────────────────────────────────────────── -->
+  <header class="masthead">
+    <div class="masthead-left">
+      <span class="firm-wordmark">Murivest</span>
+      <div class="masthead-divider"></div>
+      <span class="masthead-subtitle">Operations Terminal</span>
+    </div>
+    <span class="version-tag">v4.0</span>
+  </header>
+
+  <!-- ── STATS RAIL ────────────────────────────────────────────────────── -->
+  <div class="stats-rail">
+    <div class="stat-cell">
+      <div class="stat-num" id="s-deals"><?= stats.activeDeals ?></div>
+      <div class="stat-lbl">Active Deals</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num" id="s-pipeline">$<?= (stats.totalPipeline/1000000).toFixed(1) ?>M</div>
+      <div class="stat-lbl">Pipeline</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-num" id="s-momentum"><?= stats.momentum ?></div>
+      <div class="stat-lbl">Momentum</div>
+    </div>
+  </div>
+
+  <!-- ── NAVIGATION ───────────────────────────────────────────────────── -->
+  <nav class="nav-bar" role="navigation">
+    <div class="nav-inner">
+
+      <button class="nav-tab active" onclick="switchTab('log',this)" aria-selected="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Daily Log
+      </button>
+
+      <button class="nav-tab" onclick="switchTab('traffic',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Traffic
+      </button>
+
+      <button class="nav-tab" onclick="switchTab('flagship',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+        Flagship
+      </button>
+
+      <button class="nav-tab" onclick="switchTab('pipeline',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Pipeline
+      </button>
+
+      <button class="nav-tab" onclick="switchTab('capital',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        Capital
+      </button>
+
+      <button class="nav-tab" onclick="switchTab('mandate',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        Mandate
+      </button>
+
+    </div>
+  </nav>
+
+  <!-- ── FORM PANELS ───────────────────────────────────────────────────── -->
+  <main class="page-body">
+
+    <!-- DAILY LOG ─────────────────────────────────────────────────────── -->
+    <section id="panel-log" class="panel active">
+      <div class="panel-head">
+        <h1 class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+          Log Daily Execution
+        </h1>
+        <p class="panel-desc">Record strategic activities, outcomes and follow-up commitments</p>
+      </div>
+
+      <div class="field">
+        <label class="req" for="log-act">Strategic Activity</label>
+        <select id="log-act">
+          <? for(let i=0; i<dropdowns.activities.length; i++){ ?>
+            <option value="<?= dropdowns.activities[i] ?>"><?= dropdowns.activities[i] ?></option>
+          <? } ?>
+        </select>
+      </div>
+
+      <div class="field">
+        <label class="req" for="log-cp">Counterparty / Asset</label>
+        <div class="input-wrap">
+          <span class="input-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          </span>
+          <input type="text" id="log-cp" class="has-icon" placeholder="Entity or asset name">
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Impact Level</label>
+        <div class="impact-group">
+          <div class="impact-opt sel" data-p="Medium" onclick="pickImpact(this,'log-priority')">Medium</div>
+          <div class="impact-opt" data-p="High"   onclick="pickImpact(this,'log-priority')">High</div>
+          <div class="impact-opt" data-p="Low"    onclick="pickImpact(this,'log-priority')">Low</div>
+        </div>
+        <input type="hidden" id="log-priority" value="Medium">
+      </div>
+
+      <div class="field">
+        <label class="req" for="log-out">Outcome &amp; Next Steps</label>
+        <textarea id="log-out" placeholder="What moved forward? What are the next steps?"></textarea>
+      </div>
+
+      <div class="field">
+        <label for="log-followup">Follow-up Date</label>
+        <input type="date" id="log-followup">
+      </div>
+
+      <button class="submit-btn" onclick="submitData('log')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        <span>Log Execution</span>
+      </button>
+    </section>
+
+    <!-- TRAFFIC ───────────────────────────────────────────────────────── -->
+    <section id="panel-traffic" class="panel">
+      <div class="panel-head">
+        <h1 class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+          90-Day Traffic Log
+        </h1>
+        <p class="panel-desc">Track prospect site visits, temperature and conversion status</p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="t-name">Prospect Name</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <input type="text" id="t-name" class="has-icon" placeholder="Full name">
+          </div>
+        </div>
+        <div class="field">
+          <label for="t-company">Company</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
+            <input type="text" id="t-company" class="has-icon" placeholder="Optional">
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="t-phone">Phone</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 8.81 19.79 19.79 0 01.0 2.18 2 2 0 012 0h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 14v2.92z"/></svg></span>
+            <input type="tel" id="t-phone" class="has-icon" placeholder="07XX XXX XXX">
+          </div>
+        </div>
+        <div class="field">
+          <label for="t-email">Email</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
+            <input type="email" id="t-email" class="has-icon" placeholder="optional@email.com">
+          </div>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="t-property">Property Shown</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></span>
+            <input type="text" id="t-property" class="has-icon" placeholder="e.g. Uchumi House, Unit 4">
+          </div>
+        </div>
+        <div class="field">
+          <label for="t-estate">Node / Estate</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span>
+            <input type="text" id="t-estate" class="has-icon" placeholder="Westlands, Kilimani…">
+          </div>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="req" for="t-date">Date of Visit</label>
+        <input type="date" id="t-date">
+      </div>
+
+      <div class="field">
+        <label class="req">Conversion Temperature</label>
+        <div class="status-group">
+          <div class="status-opt" data-s="Hot"             onclick="pickStatus(this,'t-status')">Hot — Ready</div>
+          <div class="status-opt sel" data-s="Warm"        onclick="pickStatus(this,'t-status')">Warm — Reviewing</div>
+          <div class="status-opt" data-s="Cold"            onclick="pickStatus(this,'t-status')">Cold</div>
+          <div class="status-opt" data-s="Offer Submitted" onclick="pickStatus(this,'t-status')">Offer Submitted</div>
+          <div class="status-opt" data-s="Dead"            onclick="pickStatus(this,'t-status')">Dead</div>
+        </div>
+        <input type="hidden" id="t-status" value="Warm">
+      </div>
+
+      <button class="submit-btn" onclick="submitData('traffic')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+        <span>Log Site Visit</span>
+      </button>
+    </section>
+
+    <!-- FLAGSHIP ──────────────────────────────────────────────────────── -->
+    <section id="panel-flagship" class="panel">
+      <div class="panel-head">
+        <h1 class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/></svg>
+          Flagship Task
+        </h1>
+        <p class="panel-desc">Critical path items requiring immediate resolution</p>
+      </div>
+
+      <div class="field">
+        <label class="req" for="flag-asset">Asset Name</label>
+        <div class="input-wrap">
+          <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
+          <input type="text" id="flag-asset" class="has-icon" placeholder="e.g. Absa Towers">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="req" for="flag-task">Critical Task</label>
+        <textarea id="flag-task" placeholder="e.g. Draft LOI for Anchor Tenant by Friday"></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="flag-status">Status</label>
+          <select id="flag-status">
+            <? for(let i=0; i<dropdowns.statuses.length; i++){ ?>
+              <option value="<?= dropdowns.statuses[i] ?>"><?= dropdowns.statuses[i] ?></option>
+            <? } ?>
+          </select>
+        </div>
+        <div class="field">
+          <label for="flag-priority">Priority</label>
+          <select id="flag-priority">
+            <option value="Critical">Critical</option>
+            <option value="High">High</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="flag-owner">Owner</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+            <input type="text" id="flag-owner" class="has-icon" value="Mark">
+          </div>
+        </div>
+        <div class="field">
+          <label class="req" for="flag-date">Hard Deadline</label>
+          <input type="date" id="flag-date">
+        </div>
+      </div>
+
+      <button class="submit-btn" onclick="submitData('flagship')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        <span>Register Task</span>
+      </button>
+    </section>
+
+    <!-- PIPELINE ──────────────────────────────────────────────────────── -->
+    <section id="panel-pipeline" class="panel">
+      <div class="panel-head">
+        <h1 class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          Underwrite Deal
+        </h1>
+        <p class="panel-desc">Register new investment opportunity and advance to underwriting</p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="pipe-asset">Asset Name</label>
+          <input type="text" id="pipe-asset" placeholder="Property name">
+        </div>
+        <div class="field">
+          <label class="req" for="pipe-market">Market / Node</label>
+          <input type="text" id="pipe-market" placeholder="City or district">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="pipe-size">Deal Size (USD)</label>
+          <div class="input-wrap">
+            <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span>
+            <input type="number" id="pipe-size" class="has-icon" placeholder="5000000" min="0">
+          </div>
+        </div>
+        <div class="field">
+          <label class="req" for="pipe-fee">Fee % (decimal)</label>
+          <input type="number" step="0.001" id="pipe-fee" placeholder="0.005">
+          <p class="helper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Enter 0.005 for 0.5%
+          </p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="req" for="pipe-stage">Current Stage</label>
+        <select id="pipe-stage">
+          <? for(let i=0; i<dropdowns.stages.length; i++){ ?>
+            <option value="<?= dropdowns.stages[i] ?>"><?= dropdowns.stages[i] ?></option>
+          <? } ?>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="pipe-source">Lead Source</label>
+        <input type="text" id="pipe-source" placeholder="Direct, Broker, Referral, Network…">
+      </div>
+
+      <div class="field">
+        <label class="req" for="pipe-action">Next Action Required</label>
+        <textarea id="pipe-action" placeholder="Be specific — this drives the velocity metric"></textarea>
+        <p class="helper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          Specificity here drives pipeline velocity reporting
+        </p>
+      </div>
+
+      <button class="submit-btn" onclick="submitData('pipeline')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        <span>Underwrite Deal</span>
+      </button>
+    </section>
+
+    <!-- CAPITAL ───────────────────────────────────────────────────────── -->
+    <section id="panel-capital" class="panel">
+      <div class="panel-head">
+        <h1 class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+          Capital Partner
+        </h1>
+        <p class="panel-desc">Log LP relationships, deployment targets and next touchpoints</p>
+      </div>
+
+      <div class="field">
+        <label class="req" for="cap-name">Entity / LP Name</label>
+        <div class="input-wrap">
+          <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg></span>
+          <input type="text" id="cap-name" class="has-icon" placeholder="e.g. Sovereign Fund · Family Office">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="cap-tier">Relationship Tier</label>
+          <select id="cap-tier">
+            <? for(let i=0; i<dropdowns.tiers.length; i++){ ?>
+              <option value="<?= dropdowns.tiers[i] ?>"><?= dropdowns.tiers[i] ?></option>
+            <? } ?>
+          </select>
+        </div>
+        <div class="field">
+          <label for="cap-region">Region</label>
+          <input type="text" id="cap-region" placeholder="London · Nairobi · Dubai…">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="req" for="cap-mandate">Mandate Focus</label>
+        <input type="text" id="cap-mandate" placeholder="Core · Core-Plus · Value-Add · Opportunistic">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="cap-size">Target Deployment (USD)</label>
+          <input type="number" id="cap-size" placeholder="10000000" min="0">
+        </div>
+        <div class="field">
+          <label class="req" for="cap-prob">Commitment Probability</label>
+          <input type="number" step="0.01" id="cap-prob" placeholder="0.60">
+          <p class="helper">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            Enter 0.60 for 60%
+          </p>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="req" for="cap-date">Next Touchpoint</label>
+        <input type="date" id="cap-date">
+        <p class="helper">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          System will flag if this date passes without update
+        </p>
+      </div>
+
+      <button class="submit-btn" onclick="submitData('capital')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        <span>Log Capital Partner</span>
+      </button>
+    </section>
+
+    <!-- MANDATE ───────────────────────────────────────────────────────── -->
+    <section id="panel-mandate" class="panel">
+      <div class="panel-head">
+        <h1 class="panel-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          New Mandate
+        </h1>
+        <p class="panel-desc">Register exclusive or non-exclusive listing agreements</p>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="man-asset">Asset Name</label>
+          <input type="text" id="man-asset" placeholder="Property name">
+        </div>
+        <div class="field">
+          <label class="req" for="man-type">Asset Type</label>
+          <select id="man-type">
+            <? for(let i=0; i<dropdowns.assetTypes.length; i++){ ?>
+              <option value="<?= dropdowns.assetTypes[i] ?>"><?= dropdowns.assetTypes[i] ?></option>
+            <? } ?>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="req" for="man-loc">Location / Market</label>
+        <input type="text" id="man-loc" placeholder="Full address or market node">
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="man-source">Source</label>
+          <input type="text" id="man-source" placeholder="How was this mandate acquired?">
+        </div>
+        <div class="field">
+          <label class="req" for="man-provider">Provider / Client</label>
+          <input type="text" id="man-provider" placeholder="Landlord or client name">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="man-mandate-type">Mandate Type</label>
+          <select id="man-mandate-type">
+            <? for(let i=0; i<dropdowns.mandateTypes.length; i++){ ?>
+              <option value="<?= dropdowns.mandateTypes[i] ?>"><?= dropdowns.mandateTypes[i] ?></option>
+            <? } ?>
+          </select>
+        </div>
+        <div class="field">
+          <label for="man-comm">Commission Structure</label>
+          <input type="text" id="man-comm" placeholder="Standard · Negotiated…">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="man-start">Start Date</label>
+          <input type="date" id="man-start">
+        </div>
+        <div class="field">
+          <label class="req" for="man-expiry">Expiry Date</label>
+          <input type="date" id="man-expiry">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="req" for="man-price">Asking Price (USD)</label>
+          <input type="number" id="man-price" placeholder="0" min="0">
+        </div>
+        <div class="field">
+          <label class="req" for="man-fee">Fee % (decimal)</label>
+          <input type="number" step="0.001" id="man-fee" placeholder="0.02">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="req" for="man-broker">Handling Broker</label>
+        <div class="input-wrap">
+          <span class="input-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></span>
+          <input type="text" id="man-broker" class="has-icon" placeholder="Lead broker name">
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="man-notes">Notes</label>
+        <textarea id="man-notes" placeholder="Special conditions, key contacts, access arrangements…"></textarea>
+      </div>
+
+      <button class="submit-btn" onclick="submitData('mandate')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <span>Create Mandate</span>
+      </button>
+    </section>
+
+  </main>
+
+  <!-- ── LOADER OVERLAY ────────────────────────────────────────────────── -->
+  <div class="overlay" id="overlay" role="status" aria-live="polite">
+    <div class="spinner-ring" id="spinner"></div>
+    <div class="check-circle" id="check">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <div class="overlay-title" id="ov-title">Processing</div>
+    <div class="overlay-sub"   id="ov-sub">Validating fields…</div>
+  </div>
+
+  <!-- ── LOGIC ─────────────────────────────────────────────────────────── -->
+  <script>
+    /* ── Tab switching ─────────────────────────────────────────────── */
+    function switchTab(id, btn) {
+      document.querySelectorAll('.nav-tab').forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.getElementById('panel-' + id).classList.add('active');
+    }
+
+    /* ── Impact selector ───────────────────────────────────────────── */
+    function pickImpact(el, hiddenId) {
+      el.closest('.impact-group').querySelectorAll('.impact-opt').forEach(o => o.classList.remove('sel'));
+      el.classList.add('sel');
+      document.getElementById(hiddenId).value = el.dataset.p;
+    }
+
+    /* ── Status pill selector ──────────────────────────────────────── */
+    function pickStatus(el, hiddenId) {
+      el.closest('.status-group').querySelectorAll('.status-opt').forEach(o => o.classList.remove('sel'));
+      el.classList.add('sel');
+      document.getElementById(hiddenId).value = el.dataset.s;
+    }
+
+    /* ── Overlay helpers ───────────────────────────────────────────── */
+    const OV    = document.getElementById('overlay');
+    const SPIN  = document.getElementById('spinner');
+    const CHECK = document.getElementById('check');
+    const TITLE = document.getElementById('ov-title');
+    const SUB   = document.getElementById('ov-sub');
+
+    function showLoading(msg) {
+      SPIN.style.display  = 'block';
+      CHECK.style.display = 'none';
+      TITLE.textContent   = msg || 'Processing';
+      SUB.textContent     = 'Validating fields…';
+      OV.classList.add('show');
+    }
+
+    function showSuccess(msg) {
+      SPIN.style.display  = 'none';
+      CHECK.style.display = 'flex';
+      TITLE.textContent   = msg || 'Saved';
+      SUB.textContent     = 'Record written to database';
+    }
+
+    function showError(msg) {
+      SPIN.style.display  = 'none';
+      TITLE.textContent   = 'Error';
+      TITLE.style.color   = '#7F1D1D';
+      SUB.textContent     = msg || 'An unexpected error occurred';
+    }
+
+    function hideOverlay() {
+      OV.classList.remove('show');
+      TITLE.style.color = '';
+    }
+
+    function clearPanel(panelId) {
+      const panel = document.getElementById('panel-' + panelId);
+      panel.querySelectorAll('input[type="text"], input[type="number"], input[type="email"], input[type="tel"], textarea')
+           .forEach(el => el.value = '');
+    }
+
+    /* ── Validation helper ─────────────────────────────────────────── */
+    function need(val, label, list) {
+      if (!val || (typeof val === 'string' && !val.trim())) list.push(label);
+    }
+
+    function needNum(val, label, list) {
+      if (!val || isNaN(parseFloat(val)) || parseFloat(val) <= 0) list.push(label);
+    }
+
+    /* ── Main submit ───────────────────────────────────────────────── */
+    function submitData(type) {
+      let data = {}, fn = '', missing = [];
+
+      /* Collect per form */
+      if (type === 'log') {
+        const act = document.getElementById('log-act').value;
+        const cp  = document.getElementById('log-cp').value.trim();
+        const out = document.getElementById('log-out').value.trim();
+        need(act, 'Strategic Activity', missing);
+        need(cp,  'Counterparty / Asset', missing);
+        need(out, 'Outcome & Next Steps', missing);
+        data = { activity: act, counterparty: cp, outcome: out,
+                 impact: document.getElementById('log-priority').value || 'Medium',
+                 followUp: document.getElementById('log-followup').value || '' };
+        fn = 'processDailyLog';
+
+      } else if (type === 'traffic') {
+        const name     = document.getElementById('t-name').value.trim();
+        const phone    = document.getElementById('t-phone').value.trim();
+        const property = document.getElementById('t-property').value.trim();
+        const date     = document.getElementById('t-date').value;
+        need(name,     'Prospect Name', missing);
+        need(phone,    'Phone Number', missing);
+        need(property, 'Property Shown', missing);
+        need(date,     'Date of Visit', missing);
+        data = { name, company: document.getElementById('t-company').value.trim(),
+                 estate: document.getElementById('t-estate').value.trim(),
+                 phone, email: document.getElementById('t-email').value.trim(),
+                 property, dateVisited: date,
+                 status: document.getElementById('t-status').value };
+        fn = 'processTrafficLog';
+
+      } else if (type === 'flagship') {
+        const asset    = document.getElementById('flag-asset').value.trim();
+        const task     = document.getElementById('flag-task').value.trim();
+        const status   = document.getElementById('flag-status').value;
+        const owner    = document.getElementById('flag-owner').value.trim();
+        const deadline = document.getElementById('flag-date').value;
+        need(asset,    'Asset Name', missing);
+        need(task,     'Critical Task', missing);
+        need(owner,    'Owner', missing);
+        need(deadline, 'Hard Deadline', missing);
+        data = { asset, task, status, priority: document.getElementById('flag-priority').value || 'Medium', owner, deadline };
+        fn = 'processFlagshipTask';
+
+      } else if (type === 'pipeline') {
+        const asset  = document.getElementById('pipe-asset').value.trim();
+        const market = document.getElementById('pipe-market').value.trim();
+        const size   = document.getElementById('pipe-size').value;
+        const fee    = document.getElementById('pipe-fee').value;
+        const stage  = document.getElementById('pipe-stage').value;
+        const action = document.getElementById('pipe-action').value.trim();
+        need(asset,  'Asset Name', missing);
+        need(market, 'Market / Node', missing);
+        need(stage,  'Current Stage', missing);
+        need(action, 'Next Action', missing);
+        needNum(size, 'Deal Size (must be > 0)', missing);
+        needNum(fee,  'Fee % (enter as decimal e.g. 0.005)', missing);
+        data = { asset, market, size: parseFloat(size)||0, stage, fee: parseFloat(fee)||0,
+                 leadSource: document.getElementById('pipe-source').value||'Direct', nextAction: action };
+        fn = 'processPipelineDeal';
+
+      } else if (type === 'capital') {
+        const entity     = document.getElementById('cap-name').value.trim();
+        const tier       = document.getElementById('cap-tier').value;
+        const mandate    = document.getElementById('cap-mandate').value.trim();
+        const size       = document.getElementById('cap-size').value;
+        const prob       = document.getElementById('cap-prob').value;
+        const touchpoint = document.getElementById('cap-date').value;
+        need(entity,     'Entity / LP Name', missing);
+        need(tier,       'Relationship Tier', missing);
+        need(mandate,    'Mandate Focus', missing);
+        need(touchpoint, 'Next Touchpoint Date', missing);
+        needNum(size, 'Target Deployment (USD)', missing);
+        needNum(prob, 'Commitment Probability', missing);
+        data = { entity, tier, mandate, deployment: parseFloat(size)||0,
+                 probability: parseFloat(prob)||0, touchpoint,
+                 region: document.getElementById('cap-region').value||'Global' };
+        fn = 'processCapitalPartner';
+
+      } else if (type === 'mandate') {
+        const asset       = document.getElementById('man-asset').value.trim();
+        const assetType   = document.getElementById('man-type').value;
+        const location    = document.getElementById('man-loc').value.trim();
+        const provider    = document.getElementById('man-provider').value.trim();
+        const mandateType = document.getElementById('man-mandate-type').value;
+        const start       = document.getElementById('man-start').value;
+        const expiry      = document.getElementById('man-expiry').value;
+        const price       = document.getElementById('man-price').value;
+        const fee         = document.getElementById('man-fee').value;
+        const broker      = document.getElementById('man-broker').value.trim();
+        need(asset,       'Asset Name', missing);
+        need(location,    'Location / Market', missing);
+        need(provider,    'Provider / Client', missing);
+        need(mandateType, 'Mandate Type', missing);
+        need(start,       'Start Date', missing);
+        need(expiry,      'Expiry Date', missing);
+        need(broker,      'Handling Broker', missing);
+        needNum(price,    'Asking Price (USD)', missing);
+        needNum(fee,      'Fee % (decimal)', missing);
+        data = {
+          assetName:           asset,
+          assetType:           assetType,
+          location:            location,
+          providerName:        provider,          // ← FIX: was 'provider', backend expects 'providerName'
+          source:              document.getElementById('man-source').value || '',
+          mandateType:         mandateType,
+          startDate:           start,
+          expiryDate:          expiry,
+          askingPrice:         parseFloat(price) || 0,
+          feePercent:          parseFloat(fee)   || 0,
+          broker:              broker,
+          notes:               document.getElementById('man-notes').value || '',
+          commissionStructure: document.getElementById('man-comm').value  || ''
+        };
+        fn = 'processMandate';
+      }
+
+      /* Validate */
+      if (missing.length) {
+        alert('Please complete the following required fields:\n\n• ' + missing.join('\n• '));
+        return;
+      }
+
+      /* Submit */
+      showLoading('Saving record…');
+      setTimeout(() => { SUB.textContent = 'Writing to database…'; }, 500);
+
+      google.script.run
+        .withSuccessHandler(result => {
+          showSuccess(result.message || 'Record saved');
+          setTimeout(() => {
+            hideOverlay();
+            clearPanel(type);
+            if (typeof google !== 'undefined' && google.script.host) {
+              google.script.host.close();
+            }
+          }, 1800);
+        })
+        .withFailureHandler(err => {
+          showError(err.message || 'Unknown error — please try again');
+          setTimeout(hideOverlay, 3500);
+        })
+        [fn](data);
+    }
+
+    /* ── Set today as default for all date inputs ──────────────────── */
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.querySelectorAll('input[type="date"]').forEach(el => {
+        if (!el.value) el.value = today;
+      });
+    });
+  </script>
+
+</body>
+</html>

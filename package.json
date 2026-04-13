@@ -1,0 +1,25 @@
+{
+  "name": "murivest-os",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "Murivest OS - Real Estate Operating System (Supabase)",
+  "scripts": {
+    "build": "pnpm run typecheck && pnpm -r --if-present run build",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./apps/**\" --filter \"./scripts\" --if-present run typecheck",
+    "db:push": "pnpm --filter @murivest/db run push",
+    "db:studio": "pnpm --filter @murivest/db run studio",
+    "db:generate": "pnpm --filter @murivest/db run generate",
+    "dev": "pnpm --parallel --filter ./apps/* dev",
+    "lint": "pnpm -r lint"
+  },
+  "private": true,
+  "devDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.60.1",
+    "@tailwindcss/oxide-win32-x64-msvc": "4.2.2",
+    "lightningcss-win32-x64-msvc": "1.32.0",
+    "prettier": "^3.8.1",
+    "supabase": "^2.89.1",
+    "typescript": "~5.9.2"
+  }
+}

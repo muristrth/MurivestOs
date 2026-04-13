@@ -1,0 +1,4140 @@
+﻿
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+IT & Development Module Specification
+Detailed Technical Specification for IT Management & Product Development
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the IT & Development module of Murivest OS, covering system monitoring, bug tracking, feature requests, and release management.
+1.2 Module Scope
+* Product Roadmap: Track planned features and enhancements
+* Bug Tracking: Manage reported issues and defects
+* Feature Requests: Capture and prioritize new features
+* Sprint Planning: Organize development work
+* System Monitoring: Track platform health and performance
+* Release Management: Coordinate software releases
+2. Product Roadmap
+2.1 Feature Entity
+FieldTypeDescriptionidUUIDPrimary keyfeature_titleVARCHAR(255)Feature namedescriptionTEXTDetailed descriptionfeature_typeENUMenhancement, new_feature, bug_fix, technical_debtpriorityENUMlow, medium, high, criticalstatusENUMbacklog, planned, in_progress, testing, releasedrequested_byUUIDFK to usersassigned_toUUIDFK to users (developer)estimated_effortINTEGERStory points or hourstarget_releaseVARCHAR(50)Target version/releasecreated_atTIMESTAMPCreation timestamp3. Bug Tracking
+3.1 Bug Entity
+FieldTypeDescriptionidUUIDPrimary keybug_numberVARCHAR(50)Unique bug IDtitleVARCHAR(255)Bug summarydescriptionTEXTDetailed descriptionsteps_to_reproduceTEXTReproduction stepsexpected_behaviorTEXTWhat should happenactual_behaviorTEXTWhat actually happensseverityENUMlow, medium, high, criticalpriorityENUMlow, medium, high, urgentstatusENUMnew, confirmed, in_progress, testing, resolved, closedreported_byUUIDFK to usersassigned_toUUIDFK to users (developer)moduleVARCHAR(100)Affected moduleenvironmentVARCHAR(100)Where bug occurscreated_atTIMESTAMPReport timestampresolved_atTIMESTAMPResolution timestamp3.2 Bug Lifecycle
+* New - Bug reported, awaiting triage
+* Confirmed - Bug reproduced and validated
+* In Progress - Developer working on fix
+* Testing - Fix implemented, awaiting QA
+* Resolved - Fix verified and deployed
+* Closed - Bug resolved and confirmed
+4. Sprint Planning
+4.1 Sprint Entity
+FieldTypeDescriptionidUUIDPrimary keysprint_nameVARCHAR(100)Sprint namesprint_numberINTEGERSprint numberstart_dateDATESprint startend_dateDATESprint endgoalTEXTSprint goal/descriptionstatusENUMplanning, active, completedtotal_pointsINTEGERPlanned story pointscompleted_pointsINTEGERCompleted story points5. System Monitoring
+5.1 Health Metrics
+Uptime: System availability percentage
+Response Time: API response time (p50, p95, p99)
+Error Rate: Percentage of failed requests
+Throughput: Requests per second
+Resource Usage: CPU, memory, disk utilization
+5.2 Alert Configuration
+Configure alerts for:
+* Error rate exceeds threshold
+* Response time degrades
+* Resource usage spikes
+* Service becomes unavailable
+6. Release Management
+6.1 Release Entity
+FieldTypeDescriptionidUUIDPrimary keyversionVARCHAR(20)Release versionrelease_nameVARCHAR(255)Release namerelease_typeENUMmajor, minor, patch, hotfixstatusENUMplanned, in_progress, deployed, rolled_backplanned_dateDATEPlanned release dateactual_dateDATEActual release daterelease_notesTEXTChanges in this releaseapproved_byUUIDFK to users7. API Endpoints
+EndpointDescriptionGET /api/v1/featuresList features/roadmap itemsPOST /api/v1/featuresCreate feature requestGET /api/v1/bugsList bugsPOST /api/v1/bugsReport bugPUT /api/v1/bugs/{id}/statusUpdate bug statusGET /api/v1/sprintsList sprintsPOST /api/v1/sprintsCreate sprintGET /api/v1/monitoring/metricsGet system metricsGET /api/v1/releasesList releases
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+INTEGRATION SPEC
+Integration Specification
+Third-Party Integrations & API Connectivity
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document specifies all third-party integrations for Murivest OS, including authentication, data flow, error handling, and configuration requirements.
+1.2 Integration Architecture
+Murivest OS uses an API-first architecture with the following integration patterns:
+* REST API integrations for real-time data exchange
+* Webhook-based event notifications
+* OAuth 2.0 for secure authentication
+* API Gateway for unified access control
+2. Email Service Integration
+2.1 SMTP Configuration
+SettingValueProviderSendGrid / AWS SES / MailgunProtocolSMTP with TLS encryptionAuthenticationAPI Key or Username/PasswordPort587 (TLS) or 465 (SSL)2.2 Email Features
+* Transactional emails (notifications, alerts)
+* Marketing emails (campaigns, newsletters)
+* Email tracking (opens, clicks)
+* Template management
+* Bounce and unsubscribe handling
+3. SMS Integration
+3.1 SMS Provider Configuration
+SettingValueProviderTwilio / Africa's Talking / MessageBirdAPI VersionREST API v1AuthenticationAccount SID and Auth TokenFeaturesSMS, WhatsApp Business4. File Storage Integration
+4.1 Cloud Storage Configuration
+SettingValueProviderAWS S3 / Google Cloud Storage / Azure BlobStorage ClassStandard for active, Glacier for archiveEncryptionAES-256 server-side encryptionCDNCloudFront / CloudFlare for asset delivery4.2 File Types
+* Property images (JPG, PNG)
+* Documents (PDF, DOC, XLS)
+* Videos (MP4)
+* Investment memos (PDF)
+* Contracts and legal documents (PDF)
+5. Payment Integration
+5.1 Payment Gateway Configuration
+SettingValueProviderStripe / PayPal / M-Pesa / FlutterwaveAPI VersionLatest stable versionAuthenticationAPI Keys with restricted permissionsSupported MethodsCards, Bank Transfer, Mobile Money6. Calendar Integration
+6.1 Calendar Providers
+* Google Calendar (via Google Calendar API)
+* Microsoft Outlook (via Microsoft Graph API)
+* Apple Calendar (via CalDAV)
+6.2 Calendar Features
+* Two-way sync of meetings and events
+* Availability checking for scheduling
+* Automatic meeting invitations
+* Reminder notifications
+7. Analytics Integration
+7.1 Web Analytics
+Provider: Google Analytics 4 / Mixpanel
+Tracking: Page views, events, conversions
+Reporting: Traffic sources, user behavior, goals
+7.2 Business Intelligence
+Provider: Metabase / Tableau / Power BI
+Data Source: Analytics warehouse (ClickHouse)
+Refresh: Hourly incremental, daily full refresh
+8. Identity Provider Integration
+8.1 SSO Configuration
+Protocol: SAML 2.0 / OpenID Connect (OIDC)
+Providers: Azure AD / Okta / Google Workspace
+Features: Single Sign-On, automatic provisioning
+9. Integration Error Handling
+9.1 Error Management
+* Automatic retry with exponential backoff
+* Dead letter queue for failed operations
+* Alerting on repeated failures
+* Manual retry capability
+* Fallback mechanisms where applicable
+9.2 Monitoring
+* Integration health dashboard
+* API call success/failure rates
+* Response time tracking
+* Quota usage monitoring
+10. Integration Security
+10.1 Security Requirements
+* All API keys stored in secure vault (HashiCorp Vault)
+* Credentials rotated every 90 days
+* IP whitelisting where supported
+* Request signing for webhooks
+* Audit logging of all integration calls
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MIGRATION PLAN
+Data Migration Plan
+Strategy & Procedures for Data Migration to Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document outlines the data migration strategy for transitioning existing data into Murivest OS, ensuring data integrity, minimal downtime, and business continuity.
+1.2 Migration Scope
+* Contact data (investors, landlords, tenants, prospects)
+* Property records and mandates
+* Deal history and pipeline data
+* User accounts and permissions
+* Financial transactions (historical)
+* Documents and files
+2. Migration Strategy
+2.1 Approach
+Phased migration approach to minimize risk:
+Phase 1: Foundation Data: Users, departments, basic configuration
+Phase 2: Master Data: Contacts, companies, properties
+Phase 3: Transactional Data: Deals, activities, tasks
+Phase 4: Historical Data: Past transactions, archived records
+Phase 5: Documents: Files, images, documents
+2.2 Migration Methods
+API Migration: Real-time migration using REST APIs for active systems
+Bulk Import: CSV/Excel import for large datasets
+Database Migration: Direct database transfer for compatible schemas
+Manual Entry: Small datasets or complex records requiring review
+3. Data Mapping
+3.1 Contact Data Mapping
+Source FieldTarget FieldSource: Contact NameTarget: first_name, last_nameSource: EmailTarget: emailSource: PhoneTarget: phone, mobileSource: CompanyTarget: company_id (lookup)Source: TypeTarget: contact_type (map values)Source: NotesTarget: notes3.2 Property Data Mapping
+Source FieldTarget FieldSource: Property NameTarget: property_nameSource: AddressTarget: address fieldsSource: TypeTarget: property_type (map values)Source: PriceTarget: asking_priceSource: OwnerTarget: landlord_id (lookup)Source: StatusTarget: status (map values)4. Migration Process
+4.1 Pre-Migration Steps
+1. Data audit - assess source data quality
+2. Data cleansing - fix known issues
+3. Backup source systems
+4. Prepare migration environment
+5. Test migration scripts
+4.2 Migration Execution
+1. Run migration in staging environment
+2. Validate migrated data
+3. Fix any issues identified
+4. Schedule production migration window
+5. Execute production migration
+6. Validate production data
+4.3 Post-Migration
+1. Verify data completeness
+2. Run reconciliation reports
+3. Enable user access
+4. Decommission old systems
+5. Document lessons learned
+5. Data Validation
+5.1 Validation Checks
+* Record count comparison (source vs. target)
+* Sample data verification
+* Required field completeness
+* Relationship integrity checks
+* Financial reconciliation
+5.2 Rollback Plan
+If critical issues are discovered:
+* Stop migration process immediately
+* Preserve source system data
+* Assess impact and root cause
+* Fix issues and retry, or
+* Rollback to source systems if necessary
+6. Migration Timeline
+TimelineActivityWeek 1-2Data audit and cleansingWeek 3Migration script developmentWeek 4Staging migration and testingWeek 5Production migration preparationWeek 6Production migration executionWeek 7Validation and go-live support
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+DR PLAN
+Disaster Recovery Plan
+Business Continuity & Disaster Recovery Procedures
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document defines the disaster recovery procedures for Murivest OS, ensuring business continuity in the event of system failures, data loss, or catastrophic events.
+1.2 Recovery Objectives
+RTO (Recovery Time Objective): 4 hours - Maximum acceptable downtime
+RPO (Recovery Point Objective): 1 hour - Maximum acceptable data loss
+Availability Target: 99.9% uptime excluding planned maintenance
+2. Disaster Scenarios
+2.1 Scenario Classification
+Minor: Single server failure, application error
+Moderate: Database corruption, data center outage
+Major: Region-wide outage, ransomware attack
+Catastrophic: Complete infrastructure loss
+3. Backup Strategy
+3.1 Backup Schedule
+Database: Daily full backup, hourly incremental
+File Storage: Continuous replication
+Configuration: Version controlled, backed up on change
+Code Repository: Continuous sync to remote repository
+3.2 Backup Retention
+Daily backups: 30 days
+Weekly backups: 12 weeks
+Monthly backups: 12 months
+Yearly backups: 7 years
+4. Recovery Procedures
+4.1 Database Recovery
+1. Identify last known good backup
+2. Restore database from backup
+3. Apply incremental backups if available
+4. Verify data integrity
+5. Reconnect applications
+6. Verify system functionality
+4.2 Application Recovery
+1. Deploy application to recovery environment
+2. Configure environment variables
+3. Verify database connectivity
+4. Run smoke tests
+5. Update DNS/load balancer
+6. Monitor for errors
+4.3 Full Site Recovery
+1. Activate disaster recovery site
+2. Restore all services in dependency order:
+*    • Network and security infrastructure
+*    • Database servers
+*    • Application servers
+*    • File storage
+*    • Load balancers and DNS
+3. Verify all services operational
+4. Update external DNS to point to DR site
+5. Notify users of service restoration
+5. Communication Plan
+5.1 Incident Notification
+Notify stakeholders within defined timeframes:
+* IT Team - Immediate
+* Management - Within 15 minutes
+* All Users - Within 30 minutes
+* External Stakeholders - As appropriate
+5.2 Communication Channels
+* Internal: Slack, email, phone
+* External: Status page, email notifications
+* Emergency: Phone tree, SMS alerts
+6. DR Testing
+6.1 Test Schedule
+Tabletop Exercise: Quarterly - Walk through procedures
+Partial Recovery Test: Bi-annually - Test individual components
+Full DR Drill: Annually - Complete site failover test
+6.2 Test Documentation
+* Document test scenarios and expected outcomes
+* Record actual results and timing
+* Identify issues and improvement opportunities
+* Update procedures based on lessons learned
+7. Roles & Responsibilities
+DR Coordinator: Overall coordination, stakeholder communication
+Technical Lead: Technical recovery execution
+Database Administrator: Database recovery
+Network Engineer: Network and connectivity restoration
+Application Team: Application service recovery
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+SUPPORT PLAN
+Maintenance & Support Plan
+Ongoing System Maintenance & User Support Procedures
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document outlines the ongoing maintenance and support procedures for Murivest OS, ensuring system reliability, performance, and user satisfaction.
+1.2 Support Scope
+* Technical support for system issues
+* User training and guidance
+* System maintenance and updates
+* Performance monitoring and optimization
+* Security patching and updates
+2. Support Levels
+2.1 Support Tiers
+Level 1 - Help Desk: First point of contact, basic troubleshooting, password resets
+Level 2 - Technical Support: Complex issues, system configuration, bug investigation
+Level 3 - Development Team: Code-level issues, feature requests, architectural changes
+Level 4 - Vendor Support: Third-party integrations, infrastructure issues
+2.2 Response Times
+PriorityResponse TimeCritical - System Down15 minutesHigh - Major Feature Broken1 hourMedium - Partial Impact4 hoursLow - Minor Issue24 hours3. Maintenance Schedule
+3.1 Regular Maintenance
+Daily: Automated backups, health checks, log rotation
+Weekly: Security scans, performance review, patch assessment
+Monthly: System updates, database optimization, capacity review
+Quarterly: Major updates, security audits, DR testing
+3.2 Maintenance Windows
+* Scheduled during low-usage periods
+* Minimum 48-hour advance notice to users
+* Emergency maintenance with immediate notice
+* Maintenance calendar published in advance
+4. Support Channels
+4.1 User Support Options
+In-App Help: Contextual help, tooltips, knowledge base access
+Email Support: support@murivest.com - Non-urgent issues
+Phone Support: Hotline for urgent issues during business hours
+Ticket System: Track and manage support requests
+4.2 Self-Service Resources
+* Knowledge base with FAQs
+* Video tutorials
+* User manuals and guides
+* Community forum (future)
+5. Issue Management
+5.1 Issue Classification
+Bug: Software defect causing incorrect behavior
+Feature Request: New functionality or enhancement
+Question: How-to or clarification request
+Incident: Service disruption or performance issue
+5.2 Issue Lifecycle
+* Submitted - Issue reported
+* Triaged - Priority and category assigned
+* In Progress - Being investigated/worked on
+* Resolved - Fix implemented or answer provided
+* Closed - Verified and closed
+6. Performance Monitoring
+6.1 Monitored Metrics
+System Uptime: Target: 99.9%
+Response Time: Target: < 2 seconds (p95)
+Error Rate: Target: < 0.1%
+User Satisfaction: Target: > 90% positive ratings
+6.2 Proactive Monitoring
+* 24/7 automated system monitoring
+* Alert thresholds for key metrics
+* Weekly performance reports
+* Monthly capacity planning review
+7. User Training
+7.1 Training Programs
+Onboarding: New user orientation and basic training
+Role-Based Training: Department-specific functionality
+Advanced Training: Power user features and shortcuts
+Refresher Training: Periodic updates on new features
+7.2 Training Delivery
+* Live webinars
+* Recorded video tutorials
+* Documentation and guides
+* Hands-on workshops
+8. Escalation Procedures
+8.1 Escalation Path
+* Level 1 cannot resolve within SLA → Escalate to Level 2
+* Level 2 cannot resolve within SLA → Escalate to Level 3
+* Critical issues → Immediate escalation to management
+* Vendor issues → Escalate to vendor support
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+ROADMAP
+Project Roadmap & Phasing
+Development Phases, Milestones & Timeline
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document outlines the development roadmap for Murivest OS, including project phases, milestones, deliverables, and timeline for delivering the complete platform.
+1.2 Development Approach
+Murivest OS will be developed using an iterative, phased approach:
+* Agile development methodology with 2-week sprints
+* Phased rollout to manage risk and gather feedback
+* MVP-first approach for core functionality
+* Continuous integration and deployment
+2. Phase 1: Foundation (Months 1-3)
+2.1 Phase 1 Objectives
+Establish the core platform infrastructure and essential business functions.
+2.2 Phase 1 Deliverables
+Identity & Access Management: User authentication, roles, permissions
+Admin Core: User management, system configuration
+CRM Foundation: Contacts, basic deal tracking
+Property Module: Property records, basic mandate tracking
+Website Sync: Property publishing to public website
+Basic Dashboards: Executive and department dashboards
+Document Vault: Basic document storage
+2.3 Phase 1 Milestones
+Month 1: Infrastructure setup, IAM complete
+Month 2: CRM and Property modules functional
+Month 3: Website integration, Phase 1 UAT complete
+3. Phase 2: Expansion (Months 4-6)
+3.1 Phase 2 Objectives
+Add external portals and enhance internal functionality.
+3.2 Phase 2 Deliverables
+Investor Portal: Full investor portal with opportunities and portfolio
+Landlord Portal: Landlord access to property performance
+Marketing Module: Campaigns, content calendar, lead tracking
+Workflow Engine: Approval workflows and automation
+Enhanced Reporting: Advanced dashboards and analytics
+Meeting Management: Scheduling and action tracking
+3.3 Phase 2 Milestones
+Month 4: Investor Portal beta launch
+Month 5: Landlord Portal and Marketing module complete
+Month 6: Workflow engine, Phase 2 UAT complete
+4. Phase 3: Institutionalization (Months 7-9)
+4.1 Phase 3 Objectives
+Complete the platform with advanced features and knowledge systems.
+4.2 Phase 3 Deliverables
+Finance Module: Full accounting, invoicing, commission management
+Tenant Portal: Tenant access to leases and payments
+Murivest Academy: Learning management system
+Executive Capital Suite: Digital library and knowledge hub
+Advanced Analytics: BI warehouse, predictive analytics
+Mobile Optimization: Responsive design for all devices
+4.3 Phase 3 Milestones
+Month 7: Finance module and Tenant Portal complete
+Month 8: Academy and Executive Capital Suite launched
+Month 9: Full platform UAT, production readiness
+5. Project Timeline Summary
+TimelinePhaseKey DeliverablesMonth 1-3Phase 1: FoundationCore platform, CRM, PropertiesMonth 4-6Phase 2: ExpansionPortals, Marketing, WorkflowsMonth 7-9Phase 3: InstitutionalizationFinance, Academy, Analytics6. Resource Requirements
+6.1 Team Structure
+RoleCountCommitmentProduct Manager1Full-timeTechnical Lead1Full-timeBackend Developers3Full-timeFrontend Developers2Full-timeUI/UX Designer1Full-timeQA Engineer2Full-timeDevOps Engineer1Full-time7. Success Criteria
+7.1 Phase Completion Criteria
+* All planned features implemented and tested
+* Code review and security scan passed
+* UAT completed with stakeholder sign-off
+* Documentation complete
+* Performance benchmarks met
+7.2 Project Success Metrics
+User Adoption: > 90% of staff using system daily
+System Uptime: > 99.9% availability
+User Satisfaction: > 85% satisfaction rating
+Performance: < 3 second page load time
+8. Risk Management
+8.1 Key Risks
+Resource Availability: Mitigation: Cross-train team members
+Scope Creep: Mitigation: Strict change control process
+Technical Complexity: Mitigation: Proof of concepts, architectural reviews
+User Adoption: Mitigation: Early user involvement, training
+8.2 Contingency Planning
+* Buffer time built into each phase
+* Priority-based feature ranking for scope adjustment
+* Parallel workstreams to minimize dependencies
+* Regular risk review meetings
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+CRM Module Specification
+Detailed Technical Specification for Customer Relationship Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the CRM module of Murivest OS, covering contact management, deal pipeline, activity tracking, and sales automation.
+1.2 Module Scope
+* Contact Management: Investor, landlord, tenant, and prospect records
+* Company Management: Organization profiles and relationships
+* Deal Pipeline: Opportunity tracking from lead to close
+* Activity Management: Calls, meetings, emails, tasks
+* Sales Reporting: Performance metrics and forecasting
+2. Contact Management
+2.1 Contact Entity
+FieldTypeDescriptionidUUIDPrimary keycontact_typeENUMinvestor, landlord, tenant, prospect, vendorfirst_nameVARCHAR(100)First namelast_nameVARCHAR(100)Last nameemailVARCHAR(255)Email addressphoneVARCHAR(20)Primary phonemobileVARCHAR(20)Mobile phonecompany_idUUIDFK to companiesassigned_user_idUUIDFK to users (RM)statusVARCHAR(50)active, inactive, prospect, clientsourceVARCHAR(100)Lead sourceratingINTEGERRelationship rating 1-5created_atTIMESTAMPCreation timestampupdated_atTIMESTAMPUpdate timestamp2.2 Contact Preferences (Investors)
+FieldTypeDescriptionasset_typesARRAYPreferred property typesgeographiesARRAYPreferred locationsmin_ticketDECIMALMinimum investment sizemax_ticketDECIMALMaximum investment sizetarget_yieldDECIMALTarget yield percentagerisk_profileENUMconservative, moderate, aggressiveinvestment_horizonENUMshort, medium, long term3. Deal Pipeline
+3.1 Deal Entity
+FieldTypeDescriptionidUUIDPrimary keydeal_nameVARCHAR(255)Deal name/referenceproperty_idUUIDFK to propertiesbuyer_contact_idUUIDFK to contacts (buyer)seller_contact_idUUIDFK to contacts (seller)deal_valueDECIMAL(15,2)Transaction valuecommission_amountDECIMAL(15,2)Commission earnedstageENUMPipeline stageprobabilityINTEGERWin probability %expected_close_dateDATEForecast close dateactual_close_dateDATEActual close dateassigned_user_idUUIDFK to users (deal owner)created_atTIMESTAMPCreation timestamp3.2 Pipeline Stages
+StageDescriptionDefault ProbabilityleadInitial inquiry10%qualifiedContact vetted25%site_visitProperty viewed40%offer_submittedOffer presented60%negotiationTerms discussed75%closingDocumentation90%closed_wonDeal completed100%closed_lostDeal lost0%4. Activity Management
+4.1 Activity Entity
+FieldTypeDescriptionidUUIDPrimary keyactivity_typeENUMcall, meeting, email, note, tasksubjectVARCHAR(255)Activity subjectdescriptionTEXTDetailed notescontact_idUUIDFK to contactsdeal_idUUIDFK to dealsproperty_idUUIDFK to propertiesassigned_user_idUUIDFK to usersdue_dateTIMESTAMPWhen activity is duecompleted_dateTIMESTAMPWhen activity was completedstatusENUMpending, completed, cancelledoutcomeVARCHAR(100)Result of activitycreated_atTIMESTAMPCreation timestamp5. API Endpoints
+5.1 Contact Endpoints
+EndpointDescriptionGET /api/v1/contactsList contacts with filtersGET /api/v1/contacts/{id}Get contact by IDPOST /api/v1/contactsCreate new contactPUT /api/v1/contacts/{id}Update contactDELETE /api/v1/contacts/{id}Delete contactGET /api/v1/contacts/{id}/activitiesGet contact activitiesGET /api/v1/contacts/{id}/dealsGet contact deals5.2 Deal Endpoints
+EndpointDescriptionGET /api/v1/dealsList deals with pipeline filtersGET /api/v1/deals/{id}Get deal detailsPOST /api/v1/dealsCreate new dealPUT /api/v1/deals/{id}Update dealPUT /api/v1/deals/{id}/stageMove deal to new stageGET /api/v1/deals/pipelineGet pipeline summaryGET /api/v1/deals/forecastGet revenue forecast6. UI Components
+6.1 Contact List View
+* Data table with sortable columns
+* Quick filters: Type, Status, Assigned To
+* Advanced filter panel
+* Bulk actions: Export, Assign, Update Status
+* Inline editing for quick updates
+6.2 Deal Pipeline View
+* Kanban board with draggable cards
+* Stage columns with deal counts and values
+* Deal cards showing key info (name, value, close date)
+* Quick actions on cards (call, email, edit)
+* Pipeline metrics sidebar
+6.3 Activity Timeline
+* Chronological display of all activities
+* Filter by activity type
+* Quick-add activity buttons
+* Expandable details for each activity
+* Linked entities (contact, deal, property)
+7. CRM Reports
+Sales Activity Report: Calls, meetings, emails by user and period
+Pipeline Report: Deals by stage, value, probability
+Conversion Report: Lead-to-close conversion rates
+Forecast Report: Expected revenue by period
+Commission Report: Commission calculations by deal and user
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Property Management Module Specification
+Detailed Technical Specification for Property & Mandate Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Property Management module of Murivest OS, covering property records, mandates, listings, and document management.
+1.2 Module Scope
+* Property Records: Master data for all properties
+* Unit Management: Individual units within properties
+* Mandate Management: Authority to Sell agreements
+* Listing Management: Website publishing controls
+* Document Vault: Property-related documents
+2. Property Entity
+2.1 Property Schema
+FieldTypeDescriptionidUUIDPrimary keyproperty_nameVARCHAR(255)Property name/titleproperty_typeENUMoffice, retail, industrial, residential, land, mixed-useaddress_line1VARCHAR(255)Street addressaddress_line2VARCHAR(255)Additional addresscityVARCHAR(100)CitystateVARCHAR(100)State/Provincepostal_codeVARCHAR(20)Postal codecountryVARCHAR(100)CountrylatitudeDECIMAL(10,8)GPS latitudelongitudeDECIMAL(11,8)GPS longitudetotal_area_sqmDECIMAL(12,2)Total area in sq metersland_area_sqmDECIMAL(12,2)Land area in sq metersbuild_yearINTEGERYear builtlandlord_idUUIDFK to contacts (owner)statusENUMavailable, under_offer, sold, off_marketasking_priceDECIMAL(15,2)Asking pricecurrencyVARCHAR(3)Price currencyyield_percentDECIMAL(5,2)Rental yield %occupancy_rateDECIMAL(5,2)Occupancy %website_visibleBOOLEANVisible on public websitevisibility_tierENUMpublic, private, off_marketcreated_atTIMESTAMPCreation timestampupdated_atTIMESTAMPUpdate timestamp2.2 Property Specifications
+FieldTypeDescriptionfloorsINTEGERNumber of floorsparking_spacesINTEGERParking capacityelevatorsINTEGERNumber of elevatorshvac_systemVARCHAR(100)HVAC typesecurity_systemVARCHAR(100)Security featuresenergy_ratingVARCHAR(10)Energy efficiency ratingzoningVARCHAR(100)Zoning classification3. Unit Management
+3.1 Unit Entity
+FieldTypeDescriptionidUUIDPrimary keyproperty_idUUIDFK to propertiesunit_numberVARCHAR(50)Unit identifierunit_typeVARCHAR(100)Type of unitfloorINTEGERFloor numberarea_sqmDECIMAL(10,2)Unit arearental_rateDECIMAL(12,2)Monthly renttenant_idUUIDFK to contacts (tenant)lease_startDATELease start datelease_endDATELease end dateoccupancy_statusENUMoccupied, vacant, reserved4. Mandate Management
+4.1 Mandate Entity
+FieldTypeDescriptionidUUIDPrimary keyproperty_idUUIDFK to propertiesmandate_numberVARCHAR(50)Mandate referencemandate_typeENUMexclusive, sole, openstart_dateDATEMandate startexpiry_dateDATEMandate expirycommission_percentDECIMAL(5,2)Commission %minimum_commissionDECIMAL(15,2)Minimum commissionstatusENUMactive, expired, terminated, convertedexclusivityBOOLEANExclusive mandate flagsigned_agreement_urlVARCHAR(500)Document URLcreated_byUUIDFK to userscreated_atTIMESTAMPCreation timestamp4.2 Mandate Alerts
+Automated alerts for mandate management:
+* 30-day expiry warning
+* 7-day expiry warning
+* Day-of expiry notification
+* Post-expiry follow-up reminder
+5. Document Vault
+5.1 Document Entity
+FieldTypeDescriptionidUUIDPrimary keyproperty_idUUIDFK to propertiesdocument_typeENUMtitle_deed, survey, lease, mandate_agreement, photo, video, floor_plan, brochure, otherdocument_nameVARCHAR(255)File namefile_urlVARCHAR(500)Storage URLfile_sizeINTEGERFile size in bytesmime_typeVARCHAR(100)File MIME typeuploaded_byUUIDFK to usersis_publicBOOLEANVisible in public listingversionINTEGERDocument versioncreated_atTIMESTAMPUpload timestamp6. API Endpoints
+6.1 Property Endpoints
+EndpointDescriptionGET /api/v1/propertiesList properties with filtersGET /api/v1/properties/{id}Get property detailsPOST /api/v1/propertiesCreate new propertyPUT /api/v1/properties/{id}Update propertyDELETE /api/v1/properties/{id}Delete propertyGET /api/v1/properties/{id}/unitsGet property unitsGET /api/v1/properties/{id}/mandatesGet property mandatesGET /api/v1/properties/{id}/documentsGet property documentsPOST /api/v1/properties/{id}/publishPublish to website7. UI Components
+7.1 Property Grid
+* Card-based grid layout
+* Property image thumbnail
+* Key details: name, type, location, price
+* Status indicator badges
+* Quick action buttons
+7.2 Property Detail Page
+* Image gallery with zoom
+* Property specifications tab
+* Units tab (for multi-unit properties)
+* Mandates tab
+* Documents tab with preview
+* Deals tab (associated opportunities)
+* Activity timeline
+8. Property Reports
+Property Inventory Report: All properties with status and key metrics
+Mandate Expiry Report: Upcoming mandate expirations
+Listing Performance Report: Website views, inquiries per property
+Yield Analysis Report: Rental yields by property and area
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Investor Portal Specification
+Detailed Technical Specification for Investor-Facing Portal
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Investor Portal, a secure, personalized interface for Murivest investors to access opportunities, portfolio information, and communicate with their relationship managers.
+1.2 Portal Scope
+* Authentication: Secure login with MFA support
+* Dashboard: Personalized overview of opportunities and portfolio
+* Opportunities: Browse and view investment opportunities
+* Portfolio: Track current investments and performance
+* Documents: Access investment memos and reports
+* Communication: Message relationship managers
+2. Authentication & Security
+2.1 Login Process
+1. Navigate to https://investors.murivest.com
+2. Enter email address and password
+3. Complete MFA (if enabled)
+4. Session established with JWT token
+5. Redirect to personalized dashboard
+2.2 Security Features
+* Password complexity requirements
+* Account lockout after failed attempts
+* Session timeout after 30 minutes inactivity
+* Email notifications for new device logins
+* Ability to view and terminate active sessions
+3. Investor Dashboard
+3.1 Dashboard Components
+Portfolio Summary: Total invested, current value, returns
+Active Opportunities: New deals matching investor profile
+Recent Activity: Latest memos viewed, meetings scheduled
+Watchlist: Saved properties being tracked
+Upcoming Events: Scheduled meetings, webinars
+Messages: Unread communications from RM
+4. Investment Opportunities
+4.1 Opportunity Listing
+* Grid view of available opportunities
+* Filter by: asset type, location, investment size, yield
+* Sort by: date added, yield, investment size
+* Each card shows: image, title, key metrics
+* Click to view detailed opportunity page
+4.2 Opportunity Detail Page
+* Property images and virtual tour (if available)
+* Investment highlights and key metrics
+* Location map and neighborhood info
+* Financial projections and yield analysis
+* Download investment memo (PDF)
+* Request more information
+* Express interest / Submit inquiry
+5. Portfolio Management
+5.1 Portfolio View
+1. List of all current investments
+2. Each investment shows:
+*    • Property name and image
+*    • Investment amount and date
+*    • Current value (if available)
+*    • Income/distributions received
+*    • Performance metrics (IRR, cash-on-cash)
+5.2 Investment Documents
+1. Access to all investment-related documents:
+*    • Original investment memo
+*    • Signed agreements
+*    • Quarterly/annual reports
+*    • Distribution statements
+*    • Tax documents
+6. Document Access
+6.1 Document Security
+Documents are protected with multiple security layers:
+* Watermarking with investor name and date
+* Download tracking and audit logs
+* Expiration links for sensitive documents
+* View-only mode for highly confidential memos
+6.2 Document Types
+Document TypeDescriptionInvestment MemosDetailed property analysis and investment thesisDue DiligenceProperty inspection reports, financials, leasesMarket ReportsQuarterly market updates and trendsPortfolio ReportsPerformance summaries and distributions7. Communication Center
+7.1 Messaging
+* Secure messaging with assigned relationship manager
+* Message history preserved
+* Attachment support for documents
+* Email notifications for new messages
+7.2 Meeting Scheduling
+* Request meeting with relationship manager
+* View RM availability calendar
+* Select preferred date and time
+* Choose meeting type (in-person, video call, phone)
+* Receive calendar invitation
+8. Watchlist
+8.1 Managing Watchlist
+* Save properties of interest to watchlist
+* Receive updates on watched properties
+* Compare multiple properties side-by-side
+* Share watchlist with relationship manager
+9. Portal API Endpoints
+EndpointDescriptionGET /portal/opportunitiesList available opportunities for investorGET /portal/opportunities/{id}Get opportunity detailsGET /portal/portfolioGet investor portfolio summaryGET /portal/documentsList accessible documentsGET /portal/documents/{id}/downloadDownload documentPOST /portal/inquiriesSubmit inquiry about opportunityGET /portal/messagesGet message historyPOST /portal/messagesSend message to RM10. Notifications
+Investors receive notifications for:
+* New investment opportunities matching profile
+* Updates to saved/watched properties
+* New documents available
+* Messages from relationship manager
+* Upcoming meetings
+* Distribution payments
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Landlord Portal Specification
+Detailed Technical Specification for Landlord-Facing Portal
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Landlord Portal, enabling property owners to track their mandates, view property performance, and communicate with Murivest.
+1.2 Portal Scope
+* Authentication: Secure access for verified property owners
+* Property Overview: View owned properties and their status
+* Mandate Tracking: Monitor active mandates and terms
+* Performance Reports: See listing activity and inquiries
+* Offer Management: Track offers received on properties
+* Communication: Direct messaging with Murivest team
+2. Authentication & Access
+2.1 Portal Access
+1. Navigate to https://landlords.murivest.com
+2. First-time users complete registration with invitation
+3. Login with email and password
+4. Access limited to properties with active mandates
+3. Landlord Dashboard
+3.1 Dashboard Components
+Properties Summary: Total properties, active mandates, properties sold
+Active Mandates: Current mandates with expiry dates
+Recent Activity: Inquiries, viewings, offers received
+Performance Metrics: Website views, brochure downloads
+Messages: Communications from Murivest team
+Documents: Mandate agreements, reports, statements
+4. Property Management
+4.1 Property List
+1. View all properties under mandate
+2. Each property card shows:
+*    • Property image and name
+*    • Current status (available, under offer, sold)
+*    • Mandate expiry date
+*    • Asking price
+*    • Inquiry count
+4.2 Property Detail View
+* Property information and images
+* Current mandate details
+* Listing performance statistics
+* Inquiry history
+* Offer history (if any)
+* Related documents
+5. Mandate Tracking
+5.1 Mandate Details
+1. View all active and past mandates
+2. Mandate information includes:
+*    • Mandate type (exclusive, sole, open)
+*    • Start and expiry dates
+*    • Commission terms
+*    • Property listing details
+*    • Signed agreement document
+5.2 Mandate Renewal
+* Receive renewal reminders before expiry
+* Request mandate extension
+* Review and sign renewal agreement
+* Track renewal status
+6. Performance Reports
+6.1 Listing Performance
+* Website listing views
+* Brochure downloads
+* Investment memo downloads
+* Inquiry count and sources
+* Site visits scheduled/completed
+6.2 Report Frequency
+Weekly Summary: Email digest of activity
+Monthly Report: Detailed performance metrics
+On-Demand: Generate reports anytime from portal
+7. Offer Management
+7.1 Offer Tracking
+1. View all offers received on properties
+2. Offer details include:
+*    • Offer amount and terms
+*    • Buyer information (if disclosed)
+*    • Offer date
+*    • Current status (pending, accepted, rejected)
+*    • Response deadline
+7.2 Offer Response
+* Review offer details in portal
+* Communicate with Murivest team about offer
+* Accept, reject, or counter offer
+* Track offer negotiation progress
+8. Document Access
+8.1 Available Documents
+Mandate Agreements: Signed authority to sell documents
+Property Reports: Valuation and inspection reports
+Marketing Materials: Brochures, photos, floor plans
+Performance Reports: Listing activity summaries
+Settlement Documents: Documents related to completed sales
+9. Communication
+9.1 Messaging
+* Direct messaging with assigned property manager
+* Message history preserved for reference
+* Email notifications for new messages
+* Attach documents to messages
+9.2 Notifications
+* New inquiry on property
+* Offer received
+* Mandate expiry reminder
+* Weekly activity summary
+* Property status changes
+10. Portal API Endpoints
+EndpointDescriptionGET /portal/propertiesList landlord propertiesGET /portal/properties/{id}Get property detailsGET /portal/mandatesList mandatesGET /portal/mandates/{id}Get mandate detailsGET /portal/offersList offers receivedGET /portal/reports/performanceGet performance reportGET /portal/documentsList accessible documentsPOST /portal/messagesSend message to Murivest team
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Tenant Portal Specification
+Detailed Technical Specification for Tenant-Facing Portal
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Tenant Portal, enabling tenants to manage their leases, make payments, submit requests, and communicate with property management.
+1.2 Portal Scope
+* Authentication: Secure tenant access
+* Lease Management: View lease details and documents
+* Payments: View and make rent payments
+* Service Requests: Submit maintenance and service requests
+* Communication: Message property management
+* Documents: Access lease agreements and notices
+2. Authentication & Access
+2.1 Portal Access
+1. Navigate to https://tenants.murivest.com
+2. Register with tenant invitation code
+3. Create password and set up account
+4. Login with email and password
+5. Access limited to assigned lease(s)
+3. Tenant Dashboard
+3.1 Dashboard Components
+Lease Summary: Property, unit, lease dates, rent amount
+Payment Status: Current balance, next payment due
+Recent Activity: Payments made, requests submitted
+Service Requests: Open and recently completed requests
+Messages: Communications from property management
+Documents: Lease agreement, notices, statements
+4. Lease Management
+4.1 Lease Details
+1. View current and past leases
+2. Lease information includes:
+*    • Property and unit details
+*    • Lease start and end dates
+*    • Monthly rent amount
+*    • Security deposit information
+*    • Lease terms and conditions
+4.2 Lease Documents
+* Access signed lease agreement
+* Download lease documents
+* View lease addendums and amendments
+* Receive lease renewal notices
+5. Payments
+5.1 Payment History
+* View complete payment history
+* See payment dates and amounts
+* View payment method used
+* Download payment receipts
+5.2 Making Payments
+1. View current balance and due date
+2. Select payment amount (full or partial)
+3. Choose payment method:
+*    • Credit/Debit card
+*    • Bank transfer
+*    • Mobile money (where available)
+3. Confirm payment details
+4. Submit payment - confirmation received
+5.3 Payment Reminders
+* Email reminders before due date
+* Portal notification for overdue payments
+* Option to set up automatic payments
+6. Service Requests
+6.1 Submitting Requests
+1. Navigate to Service Requests → New Request
+2. Select request category:
+*    • Maintenance (plumbing, electrical, HVAC)
+*    • Repairs (appliances, fixtures)
+*    • Cleaning
+*    • Security
+*    • General Inquiry
+3. Describe the issue in detail
+4. Attach photos if applicable
+5. Submit request - tracking number assigned
+6.2 Tracking Requests
+1. View all submitted requests
+2. Check current status:
+*    • Submitted - Awaiting review
+*    • Assigned - Technician assigned
+*    • In Progress - Work underway
+*    • Completed - Issue resolved
+*    • Cancelled - Request cancelled
+3. Receive notifications on status changes
+4. Rate service after completion
+7. Communication
+7.1 Messaging
+* Direct messaging with property management
+* Message history preserved
+* Email notifications for new messages
+* Attach documents and photos
+7.2 Notices
+1. Receive official notices through portal:
+*    • Rent increase notices
+*    • Lease renewal offers
+*    • Maintenance schedule notifications
+*    • Policy updates
+*    • Emergency alerts
+8. Document Access
+8.1 Available Documents
+Lease Agreement: Signed rental contract
+Payment Receipts: Record of all payments
+Rent Statements: Monthly rent summaries
+Notices: All official communications
+Property Rules: Building policies and guidelines
+9. Portal API Endpoints
+EndpointDescriptionGET /portal/leaseGet current lease detailsGET /portal/paymentsGet payment historyPOST /portal/paymentsMake paymentGET /portal/requestsList service requestsPOST /portal/requestsSubmit service requestGET /portal/documentsList accessible documentsGET /portal/documents/{id}/downloadDownload documentPOST /portal/messagesSend message to management
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Marketing Module Specification
+Detailed Technical Specification for Marketing & Campaign Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Marketing module of Murivest OS, covering campaign management, content calendar, lead tracking, and marketing analytics.
+1.2 Module Scope
+* Campaign Management: Plan, execute, and track marketing campaigns
+* Content Calendar: Schedule and manage content publication
+* Lead Attribution: Track lead sources and campaign ROI
+* Asset Library: Manage marketing materials and brand assets
+* Social Media: Track social media activity and engagement
+* Analytics: Measure marketing performance
+2. Campaign Management
+2.1 Campaign Entity
+FieldTypeDescriptionidUUIDPrimary keycampaign_nameVARCHAR(255)Campaign namecampaign_typeENUMemail, social, ppc, event, content, otherstatusENUMdraft, active, paused, completedstart_dateDATECampaign startend_dateDATECampaign endbudgetDECIMAL(15,2)Campaign budgettarget_audienceTEXTAudience descriptiongoalsTEXTCampaign objectivescreated_byUUIDFK to userscreated_atTIMESTAMPCreation timestamp2.2 Campaign Assets
+Campaigns can include multiple assets:
+* Email templates and sequences
+* Landing pages
+* Social media posts
+* Advertisements (banners, text ads)
+* Downloadable content (guides, reports)
+* Event registrations
+3. Content Calendar
+3.1 Content Entity
+FieldTypeDescriptionidUUIDPrimary keytitleVARCHAR(255)Content titlecontent_typeENUMblog, social, email, video, webinar, otherchannelVARCHAR(100)Publication channelpublish_dateTIMESTAMPScheduled publish datestatusENUMdraft, scheduled, published, archivedassigned_toUUIDFK to users (creator)approved_byUUIDFK to users (approver)related_property_idUUIDFK to properties (optional)created_atTIMESTAMPCreation timestamp3.2 Calendar Views
+Month View: Overview of all scheduled content
+Week View: Detailed weekly schedule
+List View: Chronological list of content items
+Channel View: Content filtered by channel
+4. Lead Attribution
+4.1 Tracking Mechanisms
+Lead sources are tracked through:
+* UTM parameters on campaign URLs
+* Referral source on contact creation
+* Campaign ID associated with lead capture
+* Phone tracking numbers for call attribution
+4.2 Attribution Model
+First-touch attribution: Lead credited to first campaign interaction
+5. Asset Library
+5.1 Asset Categories
+Brand Assets: Logos, brand guidelines, color palettes
+Property Photos: Professional photos of listed properties
+Floor Plans: Property floor plans and site plans
+Investment Memos: Property investment presentations
+Brochures: Property marketing brochures
+Email Templates: Standardized email designs
+Social Graphics: Social media image templates
+5.2 Brochure Generator
+1. Select property from database
+2. Choose from available templates
+3. Auto-populate with property data and images
+4. Customize text and layout
+5. Preview and generate PDF
+6. Download or share directly
+6. Social Media Tracking
+6.1 Social Accounts
+Connect and track social media accounts:
+* LinkedIn (company page)
+* Twitter
+* Facebook
+* Instagram
+* YouTube
+6.2 Tracked Metrics
+Followers: Total and growth rate
+Reach: Post impressions and unique viewers
+Engagement: Likes, comments, shares, clicks
+Content Performance: Top performing posts by engagement
+7. Marketing Analytics
+7.1 Dashboard Metrics
+Leads Generated: Total leads by source and campaign
+Cost Per Lead (CPL): Campaign spend divided by leads
+Website Traffic: Visitors, sessions, page views
+Conversion Rate: Leads to opportunities conversion
+Campaign ROI: Attributed revenue vs. campaign spend
+7.2 Reports
+Campaign Performance Report: Metrics by campaign over time
+Lead Source Report: Leads and conversions by source
+Content Performance Report: Engagement by content type
+Social Media Report: Follower growth and engagement
+8. API Endpoints
+EndpointDescriptionGET /api/v1/campaignsList campaignsPOST /api/v1/campaignsCreate campaignGET /api/v1/campaigns/{id}/metricsGet campaign metricsGET /api/v1/content-calendarGet content calendarPOST /api/v1/contentCreate content itemGET /api/v1/assetsList marketing assetsPOST /api/v1/assetsUpload assetGET /api/v1/reports/lead-sourcesGet lead source report
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Finance Module Specification
+Detailed Technical Specification for Finance & Accounting
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Finance module of Murivest OS, covering accounting, invoicing, commission management, and financial reporting.
+1.2 Module Scope
+* Chart of Accounts: Manage GL accounts and categories
+* General Ledger: Record and track all transactions
+* Invoicing: Create, send, and track invoices
+* Commission Management: Calculate and process commissions
+* AR/AP: Manage receivables and payables
+* Financial Reporting: Generate standard financial reports
+2. Chart of Accounts
+2.1 Account Structure
+RangeCategoryExamples1000-1999AssetsCash, receivables, property assets2000-2999LiabilitiesPayables, loans, accruals3000-3999EquityCapital, retained earnings4000-4999RevenueCommissions, fees, other income5000-5999Cost of SalesDirect costs related to revenue6000-6999Operating ExpensesSalaries, rent, marketing, admin2.2 Account Entity
+FieldTypeDescriptionidUUIDPrimary keyaccount_codeVARCHAR(20)Account numberaccount_nameVARCHAR(255)Account nameaccount_typeENUMasset, liability, equity, revenue, expenseparent_account_idUUIDFK for hierarchical accountsdepartment_idUUIDFK for department allocationis_activeBOOLEANAccount status3. Transaction Management
+3.1 Transaction Entity
+FieldTypeDescriptionidUUIDPrimary keytransaction_dateDATETransaction datereference_numberVARCHAR(100)External referencedescriptionTEXTTransaction descriptiondebit_account_idUUIDFK to accountscredit_account_idUUIDFK to accountsamountDECIMAL(15,2)Transaction amountcurrencyVARCHAR(3)Currency codedepartment_idUUIDFK for allocationdeal_idUUIDFK for attributionproperty_idUUIDFK for attributioncreated_byUUIDFK to userscreated_atTIMESTAMPCreation timestamp4. Invoicing
+4.1 Invoice Entity
+FieldTypeDescriptionidUUIDPrimary keyinvoice_numberVARCHAR(50)Unique invoice numberinvoice_typeENUMcommission, fee, expense, othercustomer_idUUIDFK to contactsdeal_idUUIDFK to dealsissue_dateDATEInvoice datedue_dateDATEPayment due datesubtotalDECIMAL(15,2)Before taxtax_amountDECIMAL(15,2)Tax amounttotal_amountDECIMAL(15,2)Total duecurrencyVARCHAR(3)Currency codestatusENUMdraft, sent, paid, overdue, cancelledpaid_amountDECIMAL(15,2)Amount receivedpaid_dateDATEPayment date5. Commission Management
+5.1 Commission Calculation
+Commissions are calculated automatically:
+* Trigger: Deal status = "Closed Won"
+* Formula: Deal Value × Commission % from Mandate
+* Split: Apply agent split if multiple agents
+* Minimum: Apply minimum commission if applicable
+* Result: Commission amount recorded
+5.2 Commission Entity
+FieldTypeDescriptionidUUIDPrimary keydeal_idUUIDFK to dealsuser_idUUIDFK to users (agent)commission_amountDECIMAL(15,2)Calculated commissionstatusENUMcalculated, approved, paidapproved_byUUIDFK to users (approver)approved_atTIMESTAMPApproval timestamppaid_atTIMESTAMPPayment timestamp6. Accounts Receivable & Payable
+6.1 AR Aging
+Current: Not yet due
+1-30 Days: 1-30 days overdue
+31-60 Days: 31-60 days overdue
+61-90 Days: 61-90 days overdue
+90+ Days: More than 90 days overdue
+7. Financial Reporting
+7.1 Standard Reports
+Profit & Loss: Revenue, expenses, net income by period
+Balance Sheet: Assets, liabilities, equity snapshot
+Cash Flow: Operating, investing, financing cash flows
+Trial Balance: All account balances for verification
+AR Aging: Receivables by age bucket
+AP Aging: Payables by age bucket
+7.2 Dashboard Metrics
+Cash Position: Current bank balances
+Monthly Revenue: Revenue trend and comparison
+Outstanding AR: Total receivables and aging
+Outstanding AP: Total payables and due dates
+Commission Liability: Commissions owed to agents
+8. API Endpoints
+EndpointDescriptionGET /api/v1/accountsList chart of accountsPOST /api/v1/transactionsCreate transactionGET /api/v1/transactionsList transactionsGET /api/v1/invoicesList invoicesPOST /api/v1/invoicesCreate invoiceGET /api/v1/commissionsList commissionsPUT /api/v1/commissions/{id}/approveApprove commissionGET /api/v1/reports/pnlGet P&L reportGET /api/v1/reports/balance-sheetGet balance sheet
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Operations Module Specification
+Detailed Technical Specification for Operations & Workflow Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Operations module of Murivest OS, covering workflows, tasks, SOPs, meetings, and internal service management.
+1.2 Module Scope
+* Workflow Engine: Design and execute business process workflows
+* Task Management: Assign and track operational tasks
+* SOP Library: Maintain standard operating procedures
+* Meeting Management: Schedule meetings and track action items
+* Quality Control: Monitor process compliance
+* Internal Tickets: Handle service requests
+2. Workflow Engine
+2.1 Workflow Definition
+FieldTypeDescriptionidUUIDPrimary keyworkflow_nameVARCHAR(255)Workflow nameworkflow_typeENUMapproval, review, notification, tasktrigger_eventVARCHAR(100)Event that starts workflowstepsJSONWorkflow step definitionsis_activeBOOLEANWorkflow statuscreated_byUUIDFK to users2.2 Workflow Instances
+Active workflow executions:
+* Created when trigger event occurs
+* Progress through defined steps
+* Assign tasks to users at each step
+* Track status and history
+* Complete or terminate based on outcomes
+2.3 Standard Workflows
+Property Listing Approval: Property → Review → Approve → Publish
+Deal Stage Progression: Stage change with required approvals
+Commission Approval: Calculate → Manager → Finance → Pay
+Document Approval: Submit → Review → Approve → Archive
+3. Task Management
+3.1 Task Entity
+FieldTypeDescriptionidUUIDPrimary keytask_titleVARCHAR(255)Task namedescriptionTEXTTask detailsassigned_toUUIDFK to userscreated_byUUIDFK to usersdue_dateTIMESTAMPTask deadlinepriorityENUMlow, medium, high, urgentstatusENUMpending, in_progress, completed, cancelledrelated_typeVARCHAR(50)Entity type (property, deal, contact)related_idUUIDRelated entity IDis_recurringBOOLEANRecurring task flagrecurrence_patternJSONRecurrence rulescompleted_atTIMESTAMPCompletion timestamp3.2 Task Views
+My Tasks: Tasks assigned to current user
+Team Tasks: Tasks for team members
+Overdue Tasks: Past due date
+Completed Tasks: Recently completed
+4. SOP Library
+4.1 SOP Entity
+FieldTypeDescriptionidUUIDPrimary keysop_titleVARCHAR(255)SOP namesop_codeVARCHAR(50)Unique SOP codedepartment_idUUIDFK to departmentscategoryVARCHAR(100)SOP categorypurposeTEXTPurpose and scopeprocedureTEXTStep-by-step procedureversionINTEGERSOP versioneffective_dateDATEVersion effective datereview_dateDATENext review dateapproved_byUUIDFK to usersis_activeBOOLEANSOP status5. Meeting Management
+5.1 Meeting Entity
+FieldTypeDescriptionidUUIDPrimary keymeeting_titleVARCHAR(255)Meeting namemeeting_typeENUMteam, client, review, otherscheduled_dateTIMESTAMPMeeting date/timeduration_minutesINTEGERExpected durationlocationVARCHAR(255)Physical location or linkorganizer_idUUIDFK to usersagendaTEXTMeeting agendaminutesTEXTMeeting notesstatusENUMscheduled, in_progress, completed, cancelled5.2 Action Items
+Action items linked to meetings:
+* Created during or after meeting
+* Assigned to specific users
+* Linked to meeting record
+* Tracked to completion
+6. Internal Service Requests
+6.1 Ticket Entity
+FieldTypeDescriptionidUUIDPrimary keyticket_numberVARCHAR(50)Unique ticket numberticket_typeENUMit_support, facilities, hr, generalsubjectVARCHAR(255)Ticket subjectdescriptionTEXTIssue descriptionrequester_idUUIDFK to usersassignee_idUUIDFK to users (handler)priorityENUMlow, medium, high, urgentstatusENUMopen, in_progress, pending, resolved, closedcreated_atTIMESTAMPCreation timestampresolved_atTIMESTAMPResolution timestamp7. Quality Control
+7.1 Compliance Metrics
+Task Completion Rate: Percentage of tasks completed on time
+SOP Adherence: Process compliance score
+Ticket Resolution Time: Average time to resolve tickets
+Meeting Effectiveness: Action item completion rate
+8. API Endpoints
+EndpointDescriptionGET /api/v1/workflowsList workflow definitionsGET /api/v1/workflows/instancesList workflow instancesGET /api/v1/tasksList tasksPOST /api/v1/tasksCreate taskPUT /api/v1/tasks/{id}/completeComplete taskGET /api/v1/sopsList SOPsGET /api/v1/meetingsList meetingsPOST /api/v1/meetingsSchedule meetingGET /api/v1/ticketsList ticketsPOST /api/v1/ticketsCreate ticket
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+Legal & Compliance Module Specification
+Detailed Technical Specification for Legal, KYC & Compliance
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the Legal & Compliance module of Murivest OS, covering KYC/AML, document management, contract tracking, and compliance monitoring.
+1.2 Module Scope
+* KYC Management: Know Your Customer verification workflows
+* AML Compliance: Anti-Money Laundering procedures
+* Document Control: Legal document management
+* Contract Tracking: Agreement lifecycle management
+* Compliance Monitoring: Regulatory requirement tracking
+* Audit Trails: Complete activity logging
+2. KYC Management
+2.1 KYC Entity
+FieldTypeDescriptionidUUIDPrimary keycontact_idUUIDFK to contactskyc_typeENUMindividual, corporatestatusENUMnot_started, in_progress, pending_review, approved, rejected, expiredrisk_levelENUMlow, medium, highsubmitted_dateDATEDocuments submittedreviewed_dateDATEReview completedreviewed_byUUIDFK to usersexpiry_dateDATEKYC expirationnotesTEXTReview notes2.2 Required KYC Documents
+Identity Proof: Government-issued ID (passport, national ID)
+Address Proof: Utility bill, bank statement (within 3 months)
+Source of Funds: Bank statements, employment letter, business docs
+Corporate Documents: Certificate of incorporation, articles (for companies)
+3. NDA Management
+3.1 NDA Tracking
+Track Non-Disclosure Agreements with contacts:
+* NDA status: Not Signed, Pending, Signed, Expired
+* Signed document storage
+* Expiry date tracking
+* Automatic renewal reminders
+* Link to related opportunities
+4. Contract Management
+4.1 Contract Entity
+FieldTypeDescriptionidUUIDPrimary keycontract_numberVARCHAR(50)Unique contract numbercontract_typeENUMmandate, sale, lease, service, employment, othercontract_titleVARCHAR(255)Contract namepartiesJSONContract partiesrelated_property_idUUIDFK to propertiesrelated_deal_idUUIDFK to dealsstart_dateDATEContract startend_dateDATEContract endvalueDECIMAL(15,2)Contract valuestatusENUMdraft, pending_signature, active, expired, terminatedsigned_document_urlVARCHAR(500)Signed document storagecreated_byUUIDFK to users4.2 Contract Alerts
+* 30-day expiry warning
+* Renewal deadline notifications
+* Signature pending reminders
+5. Compliance Monitoring
+5.1 Compliance Requirements
+KYC Refresh: Annual KYC verification for all investors
+AML Screening: Ongoing sanctions and PEP screening
+Document Retention: 7-year retention for all legal documents
+Audit Trail: Complete activity logging for 7 years
+5.2 Compliance Dashboard
+* KYC completion rate by contact type
+* Pending KYC reviews
+* Expiring documents in next 90 days
+* Contract status summary
+* Compliance violations (if any)
+6. Audit Trails
+6.1 Audit Log Entity
+FieldTypeDescriptionidUUIDPrimary keyuser_idUUIDFK to users (who performed action)actionVARCHAR(100)Action performedentity_typeVARCHAR(50)Type of entity affectedentity_idUUIDID of entity affectedold_valuesJSONPrevious values (for updates)new_valuesJSONNew values (for updates)ip_addressVARCHAR(45)User IP addressuser_agentTEXTBrowser/device infocreated_atTIMESTAMPAction timestamp6.2 Audit Log Retention
+Audit logs retained for 7 years as per regulatory requirements
+7. API Endpoints
+EndpointDescriptionGET /api/v1/kycList KYC recordsGET /api/v1/kyc/{id}Get KYC detailsPUT /api/v1/kyc/{id}/reviewSubmit KYC reviewGET /api/v1/contractsList contractsPOST /api/v1/contractsCreate contractGET /api/v1/audit-logsQuery audit logsGET /api/v1/compliance/dashboardGet compliance dashboard
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MODULE SPEC
+HR Module Specification
+Detailed Technical Specification for Human Resources Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document provides detailed technical specifications for the HR module of Murivest OS, covering employee management, performance tracking, training, and organizational structure.
+1.2 Module Scope
+* Employee Management: Employee records and profiles
+* Organization Structure: Departments and reporting lines
+* Performance Management: Goals, reviews, and KPIs
+* Training Management: Course assignments and tracking
+* Leave Management: Time-off tracking
+* HR Analytics: Workforce reporting
+2. Employee Management
+2.1 Employee Entity
+FieldTypeDescriptionidUUIDPrimary keyemployee_numberVARCHAR(50)Employee IDuser_idUUIDFK to users (system account)first_nameVARCHAR(100)First namelast_nameVARCHAR(100)Last nameemailVARCHAR(255)Work emailphoneVARCHAR(20)Work phonehire_dateDATEEmployment start datetermination_dateDATEEmployment end datedepartment_idUUIDFK to departmentsjob_titleVARCHAR(100)Position titleemployment_typeENUMfull_time, part_time, contract, internemployment_statusENUMactive, on_leave, terminatedmanager_idUUIDFK to employees (reporting to)salaryDECIMAL(12,2)Base salarysalary_currencyVARCHAR(3)Salary currencyprobation_end_dateDATEProbation period end3. Organization Structure
+3.1 Department Entity
+FieldTypeDescriptionidUUIDPrimary keydepartment_nameVARCHAR(100)Department namedepartment_codeVARCHAR(20)Short codeparent_department_idUUIDFK for hierarchydepartment_head_idUUIDFK to employeescost_centerVARCHAR(50)Accounting cost centeris_activeBOOLEANDepartment status4. Performance Management
+4.1 Goal Entity
+FieldTypeDescriptionidUUIDPrimary keyemployee_idUUIDFK to employeesgoal_titleVARCHAR(255)Goal descriptiongoal_descriptionTEXTDetailed descriptionmeasurement_criteriaTEXTHow success is measuredtarget_valueDECIMAL(10,2)Target to achieveactual_valueDECIMAL(10,2)Actual achievementweightDECIMAL(3,2)Goal weight (0-1)due_dateDATEGoal deadlinestatusENUMnot_started, in_progress, achieved, missedreview_periodVARCHAR(50)Review period (Q1 2026, etc.)4.2 Performance Review
+Annual/quarterly performance review process:
+* Employee self-assessment
+* Manager evaluation
+* Goal achievement scoring
+* Competency assessment
+* Development plan creation
+* Final rating and sign-off
+5. Training Management
+5.1 Course Assignment Entity
+FieldTypeDescriptionidUUIDPrimary keyemployee_idUUIDFK to employeescourse_idUUIDFK to coursesassignment_dateDATEWhen assigneddue_dateDATECompletion deadlinecompletion_dateDATEWhen completedstatusENUMnot_started, in_progress, completed, overduescoreDECIMAL(5,2)Assessment scorecertificate_issuedBOOLEANCertificate generated6. Leave Management
+6.1 Leave Request Entity
+FieldTypeDescriptionidUUIDPrimary keyemployee_idUUIDFK to employeesleave_typeENUMannual, sick, maternity, paternity, bereavement, unpaidstart_dateDATELeave startend_dateDATELeave enddays_requestedDECIMAL(4,1)Number of daysreasonTEXTLeave reasonstatusENUMpending, approved, rejected, cancelledapproved_byUUIDFK to users (approver)approved_atTIMESTAMPApproval timestamp7. API Endpoints
+EndpointDescriptionGET /api/v1/employeesList employeesGET /api/v1/employees/{id}Get employee detailsPOST /api/v1/employeesCreate employeeGET /api/v1/departmentsList departmentsGET /api/v1/goalsList goalsPOST /api/v1/goalsCreate goalGET /api/v1/training/assignmentsList course assignmentsGET /api/v1/leave/requestsList leave requestsPOST /api/v1/leave/requestsSubmit leave request
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+Administrator User Manual
+Complete Guide for Murivest OS Administration
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual provides comprehensive guidance for administrators of Murivest OS, covering user management, system configuration, and oversight functions.
+1.2 Admin Capabilities
+* Full system access and visibility across all modules
+* User and role management
+* System configuration and settings
+* Audit log access and monitoring
+* Data export and reporting
+* Workflow and approval configuration
+2. Getting Started
+2.1 Accessing the Admin Portal
+1. Navigate to https://admin.murivest.com
+2. Enter your email address and password
+3. Complete MFA if enabled for your account
+4. You will be directed to the Admin Dashboard
+2.2 Admin Dashboard Overview
+The Admin Dashboard provides a comprehensive view of system activity:
+* System Health: Uptime, performance metrics, error rates
+* User Activity: Active users, recent logins, session statistics
+* Data Summary: Record counts across all modules
+* Pending Approvals: Items requiring administrator attention
+* Recent Alerts: System notifications and warnings
+3. User Management
+3.1 Creating New Users
+1. Navigate to Admin → Users → Create User
+2. Enter user details: First Name, Last Name, Email, Phone
+3. Select Department and Role
+4. Set temporary password or generate random password
+5. Click "Create User" to send invitation email
+3.2 Managing User Roles
+Roles determine user permissions across the system:
+Super Admin: Full system access, can manage other admins
+Executive: Cross-department visibility, approval authority
+Department Head: Full department access, team management
+Manager: Team oversight, limited admin functions
+Standard User: Standard operational access
+3.3 Deactivating Users
+1. Navigate to Admin → Users
+2. Search for and select the user
+3. Click "Deactivate" button
+4. Confirm deactivation (user data is preserved)
+5. User will be logged out and cannot access system
+4. Role & Permission Management
+4.1 Creating Custom Roles
+1. Navigate to Admin → Roles → Create Role
+2. Enter role name and description
+3. Select permissions from available options:
+*    • View permissions (read access to modules)
+*    • Create permissions (add new records)
+*    • Edit permissions (modify existing records)
+*    • Delete permissions (remove records)
+*    • Export permissions (download data)
+*    • Admin permissions (system configuration)
+4. Save the role for assignment to users
+5. System Configuration
+5.1 General Settings
+Company Information: Update company name, address, contact details
+Email Configuration: Configure SMTP settings for system emails
+Notification Settings: Set default notification preferences
+Security Settings: Configure password policies, session timeouts
+Integration Settings: Manage third-party service connections
+5.2 Workflow Configuration
+Configure approval workflows for business processes:
+* Property Listing Approval: Require approval before publishing to website
+* Deal Stage Progression: Define required approvals for each stage
+* Commission Approval: Set approval chain for commission payments
+* Document Approval: Configure document review workflows
+6. Audit & Monitoring
+6.1 Accessing Audit Logs
+1. Navigate to Admin → Audit Logs
+2. Use filters to search by:
+*    • User (who performed the action)
+*    • Action type (create, update, delete, login)
+*    • Module (CRM, Properties, Finance, etc.)
+*    • Date range
+*    • Record ID (specific entity)
+6.2 Exporting Audit Data
+Audit logs can be exported for compliance or analysis:
+* Apply desired filters to the log view
+* Click "Export" button
+* Select format (CSV, JSON, PDF)
+* Choose date range for export
+* Download will begin automatically
+7. Data Management
+7.1 Data Export
+1. Navigate to Admin → Data Export
+2. Select module to export (Contacts, Properties, Deals, etc.)
+3. Apply filters to limit exported records
+4. Select export format (CSV, Excel, JSON)
+5. Click "Export" to generate and download file
+7.2 Data Import
+1. Navigate to Admin → Data Import
+2. Select target module for import
+3. Download template file for correct format
+4. Prepare data in template format
+5. Upload file and review validation results
+6. Confirm import to create/update records
+8. Troubleshooting
+8.1 Common Issues
+IssueResolutionUser cannot log inVerify account is active, check password reset, verify MFA setupUser missing permissionsCheck role assignment, verify permission configurationSlow system performanceCheck resource utilization, review recent changes, contact supportEmail not sendingVerify SMTP configuration, check email service status
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+Sales User Manual
+Complete Guide for Sales & CRM Operations
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides sales team members through using the Murivest OS CRM to manage leads, contacts, deals, and sales activities effectively.
+1.2 Sales Module Overview
+* Contact Management: Maintain investor, landlord, and prospect records
+* Deal Pipeline: Track opportunities from lead to close
+* Activity Tracking: Log calls, meetings, emails, and notes
+* Property Matching: Match investor preferences with available properties
+* Commission Tracking: Monitor your earnings and deal performance
+2. Getting Started
+2.1 Accessing the Sales Portal
+1. Navigate to https://app.murivest.com
+2. Enter your email and password
+3. Complete MFA if required
+4. You will land on your personal Sales Dashboard
+2.2 Sales Dashboard
+Your dashboard provides a quick overview of your sales activities:
+* Pipeline Summary: Deals by stage with total value
+* Today's Activities: Scheduled calls, meetings, follow-ups
+* Recent Leads: New leads requiring attention
+* Performance Metrics: Your conversion rate, revenue, activity count
+* Hot Properties: New listings matching your investor profiles
+3. Contact Management
+3.1 Adding a New Contact
+1. Click "New Contact" button or navigate to CRM → Contacts → New
+2. Select contact type: Investor, Landlord, Tenant, or Prospect
+3. Enter contact details: Name, Email, Phone, Company
+4. Add preferences for investors (asset type, location, budget)
+5. Assign the contact to yourself or team member
+6. Add any initial notes or tags
+7. Click "Save" to create the contact
+3.2 Managing Contact Interactions
+Log all interactions to maintain relationship history:
+* Call: Log phone calls with notes and outcomes
+* Meeting: Schedule and record meeting details
+* Email: Track email correspondence
+* Note: Add general notes and observations
+* Task: Create follow-up tasks with due dates
+4. Deal Pipeline Management
+4.1 Creating a New Deal
+1. Navigate to CRM → Deals → New Deal
+2. Enter deal name (e.g., "ABC Tower - John Smith")
+3. Select associated property from the database
+4. Link buyer/investor contact
+5. Enter deal value and expected close date
+6. Set initial stage (typically "Lead" or "Qualified")
+7. Assign deal owner (yourself or team member)
+8. Add any relevant notes or documents
+9. Click "Create Deal" to add to pipeline
+4.2 Pipeline Stages
+Lead: Initial inquiry or identified opportunity
+Qualified: Contact vetted, interest confirmed
+Site Visit: Property viewing scheduled or completed
+Offer Submitted: Formal offer presented to seller
+Negotiation: Terms being discussed and refined
+Closing: Final documentation and legal processes
+Closed Won: Deal successfully completed
+Closed Lost: Deal did not proceed
+4.3 Moving Deals Through Pipeline
+1. Open the deal detail page
+2. Click "Change Stage" button
+3. Select new stage from dropdown
+4. Add stage change notes (why moving, key developments)
+5. Update probability and expected close date if needed
+6. Save changes - activity is logged automatically
+5. Property Matching
+5.1 Finding Properties for Investors
+1. Navigate to Properties → Match Finder
+2. Select investor contact or apply criteria manually:
+*    • Asset type (office, retail, industrial, etc.)
+*    • Location preferences (city, region)
+*    • Investment size range
+*    • Target yield percentage
+*    • Risk profile
+3. Click "Find Matches" to see compatible properties
+4. Review match results with compatibility scores
+5. Select properties to share with investor
+6. Activity Management
+6.1 Scheduling Follow-ups
+1. From contact or deal page, click "Add Task"
+2. Select task type: Call, Meeting, Email, or General Task
+3. Enter task description
+4. Set due date and time
+5. Set reminder (if desired)
+6. Link to related contact, deal, or property
+7. Save task - it will appear on your dashboard
+6.2 Daily Activity Planning
+Start each day by reviewing your activities:
+* Check dashboard for today's scheduled activities
+* Review overdue tasks and prioritize
+* Plan calls and meetings for the day
+* Update completed activities with outcomes
+* Schedule follow-ups based on today's interactions
+7. Commission Tracking
+7.1 Viewing Your Commissions
+1. Navigate to CRM → My Commissions
+2. View summary: Total earned, pending, projected
+3. Filter by time period (month, quarter, year)
+4. Drill down to see commission details per deal
+5. Export commission statement for your records
+7.2 Commission Status
+Pending: Deal closed, commission awaiting approval
+Approved: Commission approved, awaiting payment
+Paid: Commission payment processed
+Projected: Deal in pipeline, potential commission
+8. Sales Reports
+8.1 Personal Performance Reports
+Activity Report: Calls made, meetings held, emails sent
+Pipeline Report: Deals by stage, pipeline value, conversion rates
+Closed Deals Report: Won deals, revenue, average deal size
+Commission Report: Earnings breakdown by period
+9. Sales Best Practices
+* Log all activities immediately after completion
+* Keep contact records updated with latest information
+* Set follow-up tasks before ending each interaction
+* Update deal stages promptly when milestones are reached
+* Use the property matching tool to identify opportunities
+* Review your pipeline daily and prioritize high-value deals
+* Document all client preferences and requirements
+* Share relevant market updates with your contacts regularly
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+Investor Relations User Manual
+Complete Guide for Investor Relationship Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides Investor Relations team members through managing investor relationships, tracking capital preferences, and distributing investment opportunities.
+1.2 Investor Relations Module Overview
+* Investor Database: Comprehensive investor profiles with preferences
+* Capital Tracking: Monitor investor capital availability and deployment
+* Opportunity Distribution: Match properties to suitable investors
+* Communication Management: Track all investor interactions
+* Portal Management: Control investor access to opportunities
+* Reporting: Generate investor activity and performance reports
+2. Investor Profile Management
+2.1 Creating Investor Profiles
+1. Navigate to Investors → New Investor
+2. Enter basic information: Name, Contact Details, Company
+3. Complete Investment Profile section:
+*    • Investor Type (Individual, Family Office, Institution, Fund)
+*    • Ticket Size Range (minimum and maximum investment)
+*    • Asset Class Preferences (Office, Retail, Industrial, Residential, Mixed-Use)
+*    • Geographic Preferences (cities, regions, countries)
+*    • Target Yield (expected return percentage)
+*    • Risk Profile (Conservative, Moderate, Aggressive)
+*    • Investment Horizon (short-term, medium-term, long-term)
+4. Set KYC/NDA status and document links
+5. Assign relationship manager
+6. Save profile - matching engine will begin tracking
+2.2 Updating Investor Preferences
+Keep investor preferences current for accurate matching:
+* Regularly review and update capital availability
+* Document changes in investment strategy
+* Update contact information promptly
+* Track KYC/NDA renewal dates
+* Note any restrictions or special requirements
+3. Capital Tracking
+3.1 Recording Capital Availability
+1. Navigate to Investor → Capital Tab
+2. Enter available capital amount and currency
+3. Set capital availability timeframe
+4. Note any deployment conditions or restrictions
+5. Update as capital is deployed or new capital becomes available
+3.2 Capital Pipeline Report
+Generate reports to understand total capital availability:
+* Navigate to Reports → Capital Pipeline
+* Filter by investor type, geography, or asset class
+* View total available capital by category
+* Track committed vs. available capital
+* Export for management reporting
+4. Opportunity Distribution
+4.1 Finding Matching Investors
+1. Navigate to Properties and select a property
+2. Click "Find Matching Investors"
+3. System will display investors matching property criteria:
+*    • Asset class match
+*    • Location within preferred geography
+*    • Asking price within ticket size range
+*    • Yield aligns with target expectations
+*    • KYC/NDA requirements met
+4. Review match scores and investor details
+5. Select investors to contact
+6. Prepare and send investment memo
+4.2 Distributing Investment Memos
+1. Select property and click "Share Memo"
+2. Choose target investors (from matching results or manual selection)
+3. Select memo version to distribute
+4. Add personalized message if desired
+5. Click "Send" - memos delivered via investor portal and email
+6. Track opens, downloads, and engagement
+5. KYC & NDA Management
+5.1 Tracking Document Status
+Monitor compliance documentation for each investor:
+* Navigate to Investor → Compliance Tab
+* View NDA status: Not Signed, Pending, Signed, Expired
+* View KYC status: Not Started, In Progress, Complete, Expired
+* Upload signed documents to investor profile
+* Set expiry dates for renewal tracking
+5.2 Document Expiry Alerts
+System provides automated alerts for document expiry:
+* 30-day advance notice for upcoming expirations
+* Dashboard notification for expired documents
+* Email reminder to relationship manager
+* Investor portal notification to investor
+6. Investor Portal Management
+6.1 Portal Access Control
+1. Navigate to Investor → Portal Access
+2. Set access level for investor:
+*    • Full Access: All approved opportunities and portfolio data
+*    • Opportunities Only: New deals without portfolio view
+*    • Portfolio Only: Existing investments without new opportunities
+*    • Restricted: Limited to specific properties or categories
+3. Configure notification preferences
+4. Save settings - changes apply immediately
+6.2 Monitoring Portal Engagement
+* Navigate to Reports → Investor Engagement
+* View metrics: Logins, Memo Downloads, Property Views
+* Identify highly engaged investors for priority outreach
+* Track inactive investors for re-engagement campaigns
+7. Investor Communication
+7.1 Logging Interactions
+1. From investor profile, click "Add Activity"
+2. Select activity type: Call, Meeting, Email, Note
+3. Enter details and outcome
+4. Schedule follow-up if needed
+5. Save to build interaction history
+7.2 Bulk Communications
+1. Navigate to Investors → Bulk Actions
+2. Filter and select target investor group
+3. Choose communication type: Email or Portal Notification
+4. Compose message or select template
+5. Preview and send to selected investors
+8. Investor Relations Reporting
+Investor Summary Report: Total investors by type, geography, and status
+Capital Availability Report: Total capital available by category and timeframe
+Pipeline Report: Investors at each stage of engagement
+Engagement Report: Portal activity, memo downloads, meeting frequency
+Conversion Report: Inquiry to investment conversion rates
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+Marketing User Manual
+Complete Guide for Marketing & Campaign Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides marketing team members through managing campaigns, content, social media, and lead generation activities in Murivest OS.
+1.2 Marketing Module Overview
+* Campaign Management: Plan, execute, and track marketing campaigns
+* Content Calendar: Schedule and manage content publication
+* Lead Tracking: Monitor lead sources and attribution
+* Social Media: Track social media activity and engagement
+* Asset Library: Manage brand assets and marketing materials
+* Analytics: Measure campaign performance and ROI
+2. Campaign Management
+2.1 Creating a Campaign
+1. Navigate to Marketing → Campaigns → New Campaign
+2. Enter campaign details:
+*    • Campaign Name (e.g., "Q2 Office Properties Push")
+*    • Campaign Type (Email, Social, PPC, Event, Content)
+*    • Start and End Dates
+*    • Budget Allocation
+*    • Target Audience (investor segments, geography)
+*    • Goals (leads generated, website visits, memo downloads)
+3. Define campaign assets (emails, landing pages, ads)
+4. Set up tracking parameters for attribution
+5. Launch campaign or save as draft
+2.2 Tracking Campaign Performance
+1. Navigate to Marketing → Campaigns → [Campaign Name]
+2. View real-time metrics:
+*    • Impressions and Reach
+*    • Clicks and CTR
+*    • Leads Generated
+*    • Cost per Lead (CPL)
+*    • Conversion to Opportunities
+*    • Revenue Attribution
+3. Content Calendar
+3.1 Managing the Content Calendar
+1. Navigate to Marketing → Content Calendar
+2. View scheduled content by week or month
+3. Filter by content type, channel, or status
+4. Click any date to add new content
+3.2 Scheduling Content
+1. Click "New Content" or select date on calendar
+2. Enter content details:
+*    • Title and Description
+*    • Content Type (Blog, Social Post, Email, Video)
+*    • Channel (Website, LinkedIn, Twitter, Email)
+*    • Publish Date and Time
+*    • Assigned Creator
+*    • Approval Status
+3. Save as draft or submit for approval
+4. Content appears on calendar when approved
+4. Lead Attribution
+4.1 Tracking Lead Sources
+Murivest OS automatically tracks lead sources:
+* Website forms capture UTM parameters
+* Campaign tracking codes attribute leads to campaigns
+* Referral sources are recorded on contact creation
+* Phone inquiries can be manually tagged with source
+4.2 Lead Source Report
+1. Navigate to Marketing → Reports → Lead Sources
+2. View leads by source over selected time period
+3. See conversion rates from each source
+4. Calculate ROI by comparing cost to revenue generated
+5. Identify highest-performing channels
+5. Marketing Asset Library
+5.1 Managing Assets
+1. Navigate to Marketing → Asset Library
+2. Organize assets by category:
+*    • Brand Assets (logos, brand guidelines, templates)
+*    • Property Images (photos, floor plans, renderings)
+*    • Investment Memos (PDFs, presentations)
+*    • Social Media Graphics
+*    • Email Templates
+*    • Brochures and Flyers
+3. Upload new assets with metadata and tags
+4. Set access permissions (internal, external, public)
+5. Assets are searchable by name, tag, or category
+5.2 Brochure Generation
+1. Navigate to Marketing → Brochures → Create
+2. Select property from database
+3. Choose brochure template
+4. System auto-populates with property data and images
+5. Customize content as needed
+6. Preview and generate PDF
+7. Download or share directly with contacts
+6. Social Media Management
+6.1 Tracking Social Media Activity
+1. Navigate to Marketing → Social Media
+2. View connected accounts and recent posts
+3. Track engagement metrics:
+*    • Follower growth
+*    • Post reach and impressions
+*    • Engagement rate (likes, comments, shares)
+*    • Click-through to website
+*    • Lead generation from social channels
+7. Marketing Analytics
+7.1 Marketing Dashboard
+The marketing dashboard provides key performance insights:
+* Lead Generation: Total leads, by source, by campaign
+* Website Traffic: Visitors, page views, bounce rate
+* Campaign Performance: Active campaigns and their metrics
+* Content Performance: Top-performing content by engagement
+* ROI Summary: Marketing spend vs. attributed revenue
+7.2 Custom Reports
+1. Navigate to Marketing → Reports → Custom Report
+2. Select metrics to include
+3. Set date range and filters
+4. Choose visualization type (table, chart, graph)
+5. Save report for future use or export
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+Finance User Manual
+Complete Guide for Financial Management & Accounting
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides finance team members through managing accounts, transactions, invoicing, commissions, and financial reporting in Murivest OS.
+1.2 Finance Module Overview
+* Chart of Accounts: Manage company financial accounts
+* General Ledger: Record and track all financial transactions
+* Invoicing: Create, send, and track invoices
+* Commission Management: Calculate and process commission payments
+* AR/AP: Manage accounts receivable and payable
+* Financial Reporting: Generate P&L, Balance Sheet, Cash Flow
+2. Chart of Accounts
+2.1 Account Structure
+The chart of accounts follows standard accounting structure:
+Account RangeCategoryExamples1000-1999AssetsCash, receivables, property assets2000-2999LiabilitiesPayables, loans, accruals3000-3999EquityCapital, retained earnings4000-4999RevenueSales commissions, fees, other income5000-5999Cost of SalesDirect costs related to revenue6000-6999Operating ExpensesSalaries, rent, marketing, admin2.2 Adding New Accounts
+1. Navigate to Finance → Chart of Accounts
+2. Click "New Account"
+3. Enter account number (following range structure)
+4. Enter account name
+5. Select account type (Asset, Liability, Equity, Revenue, Expense)
+6. Set parent account if applicable
+7. Save account
+3. Transaction Management
+3.1 Recording Transactions
+1. Navigate to Finance → Transactions → New Transaction
+2. Enter transaction details:
+*    • Date
+*    • Description
+*    • Reference number (invoice, receipt, etc.)
+*    • Debit account and amount
+*    • Credit account and amount
+*    • Department allocation (if applicable)
+*    • Related deal or property (for attribution)
+3. Attach supporting documents if required
+4. Save transaction - it posts to general ledger
+3.2 Transaction Import
+1. Navigate to Finance → Transactions → Import
+2. Download template CSV file
+3. Prepare transactions in template format
+4. Upload file and review validation
+5. Confirm import to create transactions
+4. Invoicing
+4.1 Creating Invoices
+1. Navigate to Finance → Invoices → New Invoice
+2. Select invoice type:
+*    • Commission Invoice (to seller/landlord)
+*    • Fee Invoice (consulting, advisory fees)
+*    • Expense Reimbursement
+3. Select related deal (auto-populates property and parties)
+4. Enter invoice line items with descriptions and amounts
+5. Set payment terms and due date
+6. Preview invoice and send to recipient
+4.2 Tracking Invoice Status
+1. Navigate to Finance → Invoices
+2. View all invoices with status:
+*    • Draft - Not yet sent
+*    • Sent - Awaiting payment
+*    • Partially Paid - Partial payment received
+*    • Paid - Full payment received
+*    • Overdue - Past due date
+*    • Cancelled - Invoice voided
+5. Commission Management
+5.1 Commission Calculation
+Commissions are automatically calculated when deals close:
+* Deal status changes to "Closed Won"
+* System calculates commission based on:
+*    • Deal value
+*    • Commission percentage from mandate
+*    • Agent split (if multiple agents involved)
+*    • Company commission structure
+3. Commission appears in Finance → Commissions for approval
+5.2 Commission Approval Workflow
+1. Commission calculated and submitted for approval
+2. Sales manager reviews and approves
+3. Finance reviews for accuracy
+4. Executive approval for large commissions
+5. Approved commissions queued for payment
+6. Accounts Receivable & Payable
+6.1 AR Management
+1. Navigate to Finance → AR
+2. View aging report: current, 30, 60, 90+ days overdue
+3. Send payment reminders for overdue invoices
+4. Record payments when received
+5. Reconcile accounts regularly
+6.2 AP Management
+1. Navigate to Finance → AP
+2. View bills and expenses awaiting payment
+3. Schedule payments based on cash flow
+4. Mark bills as paid with payment reference
+5. Maintain vendor payment terms
+7. Financial Reporting
+7.1 Standard Reports
+Profit & Loss: Revenue, expenses, and net income for period
+Balance Sheet: Assets, liabilities, and equity snapshot
+Cash Flow Statement: Operating, investing, financing cash flows
+Trial Balance: All account balances for verification
+7.2 Custom Reports
+1. Navigate to Finance → Reports → Custom
+2. Select report type and parameters
+3. Filter by department, deal, property, or date range
+4. Generate and export (PDF, Excel)
+7.3 Dashboard Metrics
+Finance dashboard provides real-time visibility:
+* Cash Position: Current bank balances
+* Monthly Revenue: Revenue trend and comparison
+* Outstanding Receivables: Total AR and aging
+* Outstanding Payables: Total AP and due dates
+* Commission Liability: Commissions owed to agents
+8. Reconciliation
+8.1 Bank Reconciliation
+1. Navigate to Finance → Reconciliation
+2. Select bank account and statement period
+3. Import or enter bank statement transactions
+4. Match system transactions to bank transactions
+5. Investigate and resolve unmatched items
+6. Confirm reconciliation when balanced
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+Operations User Manual
+Complete Guide for Operations & Workflow Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides operations team members through managing workflows, tasks, SOPs, meetings, and internal processes in Murivest OS.
+1.2 Operations Module Overview
+* Workflow Engine: Design and manage business process workflows
+* Task Management: Assign, track, and complete operational tasks
+* SOP Library: Maintain standard operating procedures
+* Meeting Management: Schedule meetings and track action items
+* Quality Control: Monitor process compliance and quality
+* Internal Tickets: Handle internal service requests
+2. Workflow Management
+2.1 Understanding Workflows
+Workflows automate business processes with defined steps and approvals:
+Property Listing Approval: Property → Review → Approve → Publish
+Deal Stage Progression: Lead → Qualify → Site Visit → Offer → Close
+Commission Approval: Calculate → Manager Review → Finance Review → Pay
+Document Approval: Submit → Review → Approve → Archive
+2.2 Monitoring Active Workflows
+1. Navigate to Operations → Workflows
+2. View all active workflow instances
+3. Filter by workflow type, status, or assignee
+4. Identify bottlenecks and overdue items
+5. Escalate stalled workflows as needed
+3. Task Management
+3.1 Creating Tasks
+1. Navigate to Operations → Tasks → New Task
+2. Enter task details:
+*    • Title and description
+*    • Assignee (individual or team)
+*    • Due date and priority
+*    • Related entity (property, deal, contact)
+*    • Checklist items (if applicable)
+3. Save task - assignee receives notification
+3.2 Recurring Tasks
+1. Create task as normal
+2. Enable "Recurring" option
+3. Set recurrence pattern:
+*    • Daily
+*    • Weekly (select days)
+*    • Monthly (select date)
+*    • Quarterly
+3. Set end date or number of occurrences
+4. Save - tasks will auto-generate on schedule
+3.3 Task Dashboard
+The task dashboard provides visibility into all tasks:
+* My Tasks: Assigned to you, sorted by due date
+* Team Tasks: Tasks for your team members
+* Overdue Tasks: Past due date requiring attention
+* Completed Tasks: Recently completed for reference
+4. SOP Library
+4.1 Accessing SOPs
+Standard Operating Procedures guide consistent execution:
+* Navigate to Operations → SOP Library
+* Browse by department or category
+* Search by keyword
+* View SOP details with steps and templates
+4.2 Creating SOPs
+1. Navigate to Operations → SOP Library → New SOP
+2. Enter SOP title and department
+3. Write procedure steps:
+*    • Purpose and scope
+*    • Step-by-step instructions
+*    • Required forms or templates
+*    • Approval requirements
+*    • Related policies or regulations
+3. Attach related documents or templates
+4. Submit for approval before publishing
+5. Meeting Management
+5.1 Scheduling Meetings
+1. Navigate to Operations → Meetings → Schedule
+2. Enter meeting details:
+*    • Title and description
+*    • Date, time, and duration
+*    • Location or video conference link
+*    • Required and optional attendees
+*    • Agenda items
+3. Save - invitations sent to attendees
+5.2 Meeting Minutes & Action Items
+1. During or after meeting, open meeting record
+2. Add attendees who were present
+3. Document key discussion points
+4. Create action items with owners and due dates
+5. Save minutes - distributed to attendees automatically
+6. Quality Control
+6.1 Process Compliance
+1. Navigate to Operations → Quality Control
+2. View compliance metrics by department:
+*    • Task completion rate
+*    • On-time completion percentage
+*    • SOP adherence score
+*    • Process deviation incidents
+6.2 Quality Audits
+1. Schedule periodic quality audits
+2. Review random sample of completed tasks
+3. Verify SOP compliance
+4. Document findings and recommendations
+5. Track improvement over time
+7. Internal Service Requests
+7.1 Submitting Tickets
+1. Navigate to Operations → Tickets → New Ticket
+2. Select ticket type:
+*    • IT Support (technical issues)
+*    • Facilities (office-related)
+*    • HR Request (personnel matters)
+*    • General (other requests)
+3. Describe issue or request in detail
+4. Set priority level
+5. Submit - ticket routed to appropriate team
+7.2 Managing Tickets
+1. View assigned tickets in Operations → Tickets
+2. Update status as work progresses:
+*    • Open - Awaiting assignment
+*    • In Progress - Being worked on
+*    • Pending - Waiting for information
+*    • Resolved - Issue fixed
+*    • Closed - Completed and verified
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+HR User Manual
+Complete Guide for Human Resources Management
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides HR team members through managing employees, performance, training, and organizational data in Murivest OS.
+1.2 HR Module Overview
+* Employee Management: Maintain employee records and profiles
+* Organization Structure: Manage departments and reporting lines
+* Performance Management: Track goals, reviews, and KPIs
+* Training Management: Monitor course completion and certifications
+* Attendance & Leave: Track time off and attendance
+* HR Analytics: Generate workforce reports and insights
+2. Employee Management
+2.1 Adding New Employees
+1. Navigate to HR → Employees → New Employee
+2. Enter employee details:
+*    • Personal Information (name, contact, address)
+*    • Employment Details (start date, department, role)
+*    • Compensation (salary, currency, pay frequency)
+*    • Reporting Structure (manager, direct reports)
+*    • Documents (contract, ID, certificates)
+3. Set system access permissions
+4. Save - employee record created and welcome email sent
+2.2 Managing Employee Records
+1. Navigate to HR → Employees
+2. Search and filter employees by department, status, etc.
+3. View individual employee profiles
+4. Update information as changes occur:
+*    • Role or department changes
+*    • Salary adjustments
+*    • Manager changes
+*    • Status changes (active, on leave, terminated)
+3. Organization Structure
+3.1 Managing Departments
+1. Navigate to HR → Organization → Departments
+2. View current department structure
+3. Add new departments as needed:
+*    • Department name
+*    • Department code
+*    • Department head
+*    • Parent department (for sub-departments)
+3.2 Organization Chart
+1. Navigate to HR → Organization → Chart
+2. View visual organization hierarchy
+3. Expand/collapse departments
+4. Click employees to view profiles
+5. Export chart for presentations
+4. Performance Management
+4.1 Setting Employee Goals
+1. Navigate to HR → Performance → Goals
+2. Select employee
+3. Click "Add Goal"
+4. Enter goal details:
+*    • Goal title and description
+*    • Measurement criteria (KPI)
+*    • Target value and deadline
+*    • Weight (relative importance)
+4. Save goal - employee notified and can track progress
+4.2 Performance Reviews
+1. Navigate to HR → Performance → Reviews
+2. Initiate review cycle:
+*    • Select review period and employees
+*    • Employee completes self-assessment
+*    • Manager completes evaluation
+*    • Calibration meeting (if applicable)
+*    • Final review meeting with employee
+*    • Document outcomes and development plans
+5. Training Management
+5.1 Tracking Course Completion
+1. Navigate to HR → Training → Employee Progress
+2. View training status for all employees:
+*    • Not Started - Course assigned but not begun
+*    • In Progress - Employee actively taking course
+*    • Completed - Course finished, certificate issued
+*    • Overdue - Past due date for completion
+5.2 Certifications
+1. Navigate to HR → Training → Certifications
+2. View employee certifications by type
+3. Track expiration dates
+4. Set renewal reminders
+5. Verify compliance requirements met
+6. Leave Management
+6.1 Leave Types
+Murivest OS tracks various leave types:
+* Annual Leave
+* Sick Leave
+* Maternity/Paternity Leave
+* Bereavement Leave
+* Unpaid Leave
+* Public Holidays
+6.2 Managing Leave Requests
+1. Navigate to HR → Leave → Requests
+2. View pending leave requests
+3. Review request details (dates, type, balance)
+4. Approve or reject with comments
+5. Approved leave appears on team calendar
+7. HR Reports
+7.1 Standard Reports
+Headcount Report: Current employees by department, status, tenure
+Turnover Report: Hires, terminations, and turnover rate
+Performance Summary: Goal completion and review ratings
+Training Report: Course completion rates and compliance
+Leave Balance Report: Leave balances and utilization
+7.2 HR Dashboard
+The HR dashboard provides workforce insights:
+* Total headcount and growth trend
+* Upcoming probation reviews
+* Training completion summary
+* Pending leave requests
+* Performance review status
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+USER MANUAL
+IT User Manual
+Complete Guide for IT & System Administration
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides IT team members through managing the Murivest OS platform, including system monitoring, user support, and technical administration.
+1.2 IT Module Overview
+* System Monitoring: Monitor platform health and performance
+* User Support: Handle IT tickets and user issues
+* Access Management: Manage user permissions and security
+* Integration Management: Configure third-party integrations
+* Backup & Recovery: Manage data backup and restoration
+* System Updates: Coordinate platform updates and maintenance
+2. System Monitoring
+2.1 Health Dashboard
+1. Navigate to IT → Monitoring → Dashboard
+2. View real-time system metrics:
+*    • System uptime percentage
+*    • API response times
+*    • Error rates by service
+*    • Database connection status
+*    • Server resource utilization (CPU, memory, disk)
+2.2 Alert Configuration
+1. Navigate to IT → Monitoring → Alerts
+2. Configure alert thresholds:
+*    • Error rate > 1% for 5 minutes
+*    • Response time > 2 seconds
+*    • CPU usage > 80%
+*    • Memory usage > 85%
+*    • Disk space < 20%
+3. Set notification channels (email, Slack, SMS)
+4. Define escalation procedures
+3. User Support Management
+3.1 IT Ticket Queue
+1. Navigate to IT → Support → Tickets
+2. View open IT support tickets
+3. Filter by priority, category, and assignee
+4. Ticket categories include:
+*    • Login Issues
+*    • Password Reset
+*    • Access Requests
+*    • Feature Questions
+*    • Bug Reports
+*    • Performance Issues
+3.2 Resolving Tickets
+1. Open ticket and review issue description
+2. Investigate and diagnose the problem
+3. Apply appropriate resolution:
+*    • Reset user password
+*    • Adjust user permissions
+*    • Clear browser cache/cookies (guide user)
+*    • Escalate to development team for bugs
+*    • Document workaround for known issues
+3. Update ticket with resolution notes
+4. Close ticket - user receives notification
+4. Access Management
+4.1 Permission Audits
+1. Navigate to IT → Access → Audit
+2. Review user access permissions
+3. Identify users with excessive permissions
+4. Check for inactive users with active access
+5. Generate compliance reports
+4.2 Emergency Access
+1. Navigate to IT → Access → Emergency
+2. Grant temporary elevated access:
+*    • Select user and required permissions
+*    • Set expiration time (maximum 24 hours)
+*    • Document business justification
+*    • Access is automatically revoked at expiration
+5. Integration Management
+5.1 Active Integrations
+Monitor and manage third-party integrations:
+* Email Service (SMTP/IMAP)
+* SMS Gateway
+* File Storage (S3/Cloud)
+* Payment Processor
+* Analytics Platform
+* Identity Provider (SSO)
+5.2 Integration Health
+1. Navigate to IT → Integrations
+2. View status of all integrations
+3. Check API quota usage
+4. Monitor error rates per integration
+5. Test integrations periodically
+6. Backup & Recovery
+6.1 Backup Monitoring
+1. Navigate to IT → Backups
+2. View backup status:
+*    • Last successful backup timestamp
+*    • Backup size and duration
+*    • Backup type (full, incremental)
+*    • Storage location
+*    • Retention status
+6.2 Recovery Procedures
+1. Navigate to IT → Backups → Recovery
+2. Select backup point to restore from
+3. Choose recovery scope:
+*    • Single record restore
+*    • Table-level restore
+*    • Full database restore
+*    • File storage restore
+3. Initiate recovery - system validates backup integrity
+4. Monitor recovery progress
+5. Verify recovered data
+7. System Updates
+7.1 Maintenance Windows
+1. Navigate to IT → Maintenance → Schedule
+2. Schedule maintenance windows:
+*    • Select date and time (low-usage period)
+*    • Define maintenance type (update, patch, config)
+*    • Estimate duration
+*    • Set user notification message
+*    • Save - users receive advance notice
+7.2 Update Deployment
+1. Review release notes for new version
+2. Test in staging environment
+3. Schedule deployment during maintenance window
+4. Notify users of upcoming changes
+5. Execute deployment with monitoring
+6. Verify system functionality post-deployment
+7. Communicate completion to users
+8. System Logs
+8.1 Accessing Logs
+1. Navigate to IT → Logs
+2. Select log type:
+*    • Application Logs - System events and errors
+*    • Access Logs - User login/logout activity
+*    • API Logs - API request/response details
+*    • Audit Logs - Data change tracking
+*    • Security Logs - Security-related events
+3. Filter by date range, severity, or user
+4. Export logs for analysis if needed
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+TRAINING MANUAL
+Murivest Academy Training Manual
+Learning Management System Guide
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This manual guides administrators and employees through the Murivest Academy learning management system, covering course creation, assignment, tracking, and certification.
+1.2 Academy Overview
+* Course Library: Centralized repository of training content
+* Learning Paths: Structured curricula by role and department
+* Assessments: Quizzes and tests to verify knowledge
+* Certifications: Track and manage employee certifications
+* Progress Tracking: Monitor individual and team learning progress
+2. Course Management
+2.1 Creating Courses
+1. Navigate to Academy → Courses → New Course
+2. Enter course details:
+*    • Course title and description
+*    • Category (Sales, Operations, Compliance, etc.)
+*    • Target audience (roles, departments)
+*    • Estimated duration
+*    • Prerequisites (if any)
+3. Add course content:
+*    • Video lessons (upload or embed)
+*    • Documents (PDFs, presentations)
+*    • Text content
+*    • External links
+4. Add assessments (quizzes) if required
+5. Set completion criteria
+6. Publish course
+2.2 Course Structure
+Organize courses with modules and lessons:
+* Course - Top-level container
+* Modules - Major sections or topics
+* Lessons - Individual learning units
+* Assessments - Quizzes at module or course level
+3. Learning Paths
+3.1 Creating Learning Paths
+1. Navigate to Academy → Learning Paths → New Path
+2. Enter path name and description
+3. Select target audience (role/department)
+4. Add courses in sequence:
+*    • Core courses (required)
+*    • Elective courses (optional)
+*    • Prerequisites that must be completed first
+4. Set completion deadline
+5. Assign to employees or make available for self-enrollment
+3.2 Standard Learning Paths
+Path NameAudienceFocus AreasNew Hire OnboardingAll new employeesCompany overview, systems training, complianceSales CertificationSales teamSales skills, CRM training, product knowledgeRM CertificationRelationship ManagersInvestor management, deal execution, complianceLeadership TrackManagersTeam management, coaching, strategic planning4. Assessments
+4.1 Creating Quizzes
+1. Navigate to Academy → Assessments → New Quiz
+2. Enter quiz title and instructions
+3. Configure quiz settings:
+*    • Passing score percentage
+*    • Number of attempts allowed
+*    • Time limit (if applicable)
+*    • Randomize question order
+*    • Show correct answers after completion
+3. Add questions:
+*    • Multiple choice (single answer)
+*    • Multiple choice (multiple answers)
+*    • True/False
+*    • Short answer
+4. Set correct answers and point values
+5. Save and attach to course
+5. Tracking Employee Progress
+5.1 Individual Progress
+1. Navigate to Academy → Progress → Employees
+2. Search for employee
+3. View progress summary:
+*    • Enrolled courses and completion status
+*    • Quiz scores and attempts
+*    • Time spent learning
+*    • Certificates earned
+*    • Overdue assignments
+5.2 Team Progress
+1. Navigate to Academy → Progress → Teams
+2. Select department or team
+3. View aggregate metrics:
+*    • Average completion rate
+*    • Courses completed per employee
+*    • Certification achievement rate
+*    • Overdue training items
+6. Certifications
+6.1 Managing Certifications
+1. Navigate to Academy → Certifications
+2. View all earned certifications
+3. Filter by employee, course, or date range
+4. Verify certification authenticity
+5. Export certification records
+6.2 Certification Requirements
+Some roles require specific certifications:
+* Sales Certification required before accessing live leads
+* Compliance Training required annually
+* Data Security Training required for all employees
+* Leadership Certification required for managers
+7. Employee Learning Experience
+7.1 Accessing Assigned Training
+1. Navigate to Academy from main menu
+2. View "My Learning" dashboard
+3. See assigned courses and learning paths
+4. Click course to start or continue learning
+7.2 Completing Courses
+1. Open assigned course
+2. Progress through lessons in sequence
+3. Mark lessons as complete
+4. Complete required quizzes
+5. Achieve passing score on assessments
+6. Certificate issued upon course completion
+7.3 Self-Directed Learning
+Employees can also explore additional courses:
+* Browse course library by category
+* Enroll in optional courses
+* Track personal development goals
+* Earn additional certifications
+8. Academy Reports
+Course Completion Report: Completion rates by course and audience
+Quiz Performance Report: Average scores, pass rates, common mistakes
+Certification Report: Certifications earned and expiring
+Learning Activity Report: Time spent learning by employee/team
+Compliance Training Report: Mandatory training completion status
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+DOCUMENTATION
+Executive Capital Suite Documentation
+Knowledge Hub & Digital Library Guide
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document describes the Murivest Executive Capital Suite, a comprehensive digital library and knowledge hub containing all business manuals, playbooks, and training resources for Murivest Realty.
+1.2 Executive Capital Suite Overview
+* Digital Library: Centralized repository of all business knowledge
+* Manuals & Playbooks: Process documentation for all departments
+* Training Resources: Videos, courses, and learning materials
+* Templates & Tools: Standardized documents and frameworks
+* Search & Discovery: Find information quickly across all resources
+2. Library Structure
+2.1 Content Categories
+CategoryContentsSales LibrarySales scripts, playbooks, objection handling, closing techniquesInvestor Relations LibraryInvestor communication standards, relationship managementAcquisition LibraryProperty sourcing, mandate acquisition, valuation guidesOperations LibrarySOPs, process workflows, quality standardsFinance LibraryFinancial analysis, underwriting, investment metricsMarketing LibraryBrand guidelines, campaign playbooks, content standardsLegal & Compliance LibraryKYC/AML procedures, contract templates, regulatory guidesLeadership LibraryManagement principles, coaching guides, strategic planning3. Key Manuals & Playbooks
+3.1 Core Business Manuals
+The Murivest Sales Script Playbook: Complete guide to sales conversations, from initial contact to closing
+The Murivest Deal Origination Manual: Process for finding and securing new property mandates
+The Murivest Deal Execution Playbook: Step-by-step guide to moving deals from offer to close
+The Murivest Investor Playbook: Best practices for investor relationship management
+The Murivest Seller Playbook: Strategies for engaging and converting property sellers
+The Murivest Brand & Communication Standard: Guidelines for all external communications
+The Murivest Operations & Systems Manual: Internal processes and system usage guidelines
+The Murivest Buying Commercial Properties Manual: Guide to property evaluation and acquisition
+4. Content Types
+4.1 Available Formats
+Documents: PDFs, Word documents with detailed procedures and guidelines
+Presentations: PowerPoint decks for training and reference
+Videos: Training videos, walkthroughs, and recorded sessions
+Templates: Standardized documents ready for customization
+Checklists: Step-by-step guides for processes
+Scripts: Conversation guides for sales and client interactions
+Calculators: Interactive tools for financial analysis
+5. Access & Permissions
+5.1 Role-Based Access
+Content access is controlled by role:
+* All Employees: Core manuals, company policies, general training
+* Sales Team: Sales playbooks, scripts, objection handling
+* Managers: Leadership guides, coaching materials, team management
+* Executives: Strategic planning, financial analysis, board materials
+* Department-Specific: Role-specific content by department
+5.2 Required Reading
+Certain content is marked as required reading:
+* New hires must complete onboarding reading within first 30 days
+* Sales team must review Sales Playbook annually
+* Compliance materials must be reviewed when updated
+* System tracks completion of required reading
+6. Using the Executive Capital Suite
+6.1 Navigation
+1. Access via main menu: Executive Capital Suite
+2. Browse by category or use search
+3. Filter by content type, department, or date
+4. View recently added or updated content
+6.2 Search Functionality
+1. Enter keywords in search bar
+2. Results include documents, videos, and templates
+3. Filter results by category, type, or date
+4. Save frequent searches for quick access
+6.3 Document Features
+* View online or download for offline access
+* Bookmark frequently used documents
+* Share documents with team members
+* Add personal notes to documents
+* Track version history for updated content
+7. Content Management
+7.1 Adding New Content
+1. Navigate to Executive Capital Suite → Admin → Add Content
+2. Upload document or enter content details
+3. Select category and assign tags
+4. Set access permissions
+5. Mark as required reading if applicable
+6. Submit for approval
+7.2 Content Review Process
+1. Subject matter expert drafts content
+2. Department head reviews for accuracy
+3. Executive approves for publication
+4. Content team formats and publishes
+5. Employees notified of new content
+7.3 Version Control
+All content is version controlled:
+* Version number displayed on each document
+* Change log tracks updates
+* Previous versions available for reference
+* Users notified of significant updates
+8. Integration with Workflows
+8.1 Contextual Content
+Relevant content appears in context:
+* When viewing a property, see related acquisition guides
+* When creating a deal, see sales playbook links
+* When onboarding, see required reading assignments
+* System suggests content based on user activity
+8.2 Linked Resources
+Manuals connect to related resources:
+* Playbooks link to relevant templates
+* Procedures link to related SOPs
+* Training videos linked to certification tracks
+* Cross-references between related topics
+9. Usage Analytics
+9.1 Tracking Content Usage
+1. Navigate to Executive Capital Suite → Analytics
+2. View metrics:
+*    • Most accessed documents
+*    • Search terms used
+*    • Content completion rates
+*    • Popular categories
+*    • Unused content (candidates for review)
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+MASTER INDEX
+Murivest OS Documentation Suite
+Complete Software Development Documentation Index
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+Executive Summary
+This documentation suite contains all 35 comprehensive documents required for the development, deployment, and operation of Murivest OS - a unified enterprise platform for Murivest Realty. The documents are formatted according to Harvard Business Review standards, providing professional, publication-ready materials for all stakeholders.
+Document Categories
+Core Project Documents (1-9)
+* 01. Project Charter / Business Case
+* 02. Software Requirements Specification (SRS)
+* 03. System Architecture Document
+* 04. Database Design Document
+* 05. API Specification Document
+* 06. User Interface Design Document
+* 07. Security & Compliance Document
+* 08. Testing Strategy Document
+* 09. Deployment Plan
+User Manuals (10-18)
+* 10. User Manual - Administrator
+* 11. User Manual - Sales
+* 12. User Manual - Investor Relations
+* 13. User Manual - Marketing
+* 14. User Manual - Finance
+* 15. User Manual - Operations
+* 16. User Manual - HR
+* 17. User Manual - IT
+* 18. Training Manual - Murivest Academy
+Specialized Documentation (19)
+* 19. Executive Capital Suite Documentation
+Module Specifications (20-30)
+* 20. CRM Module Specification
+* 21. Property Management Module Specification
+* 22. Investor Portal Specification
+* 23. Landlord Portal Specification
+* 24. Tenant Portal Specification
+* 25. Marketing Module Specification
+* 26. Finance Module Specification
+* 27. Operations Module Specification
+* 28. Legal/Compliance Module Specification
+* 29. HR Module Specification
+* 30. IT/Development Module Specification
+Technical & Operational Plans (31-35)
+* 31. Integration Specification
+* 32. Data Migration Plan
+* 33. Disaster Recovery Plan
+* 34. Maintenance & Support Plan
+* 35. Project Roadmap & Phasing Document
+Document Purpose Matrix
+AudiencePrimary DocumentsPurposeExecutive Leadership1, 9, 35Strategic oversight, approvals, roadmapProduct Management1, 2, 3, 35Requirements, architecture, planningDevelopment Team2, 3, 4, 5, 6, 20-30Technical implementation guidesQA Team2, 7, 8Testing, security validationOperations Team9, 32, 33, 34Deployment, maintenance, DRUsage Guidelines
+For Development Teams
+* Start with Documents 1-5 for project understanding
+* Reference Documents 20-30 for module-specific implementation
+* Follow Document 7 for security requirements
+* Use Document 8 for testing procedures
+For Business Users
+* Documents 10-18 provide role-specific guidance
+* Document 19 contains business process documentation
+* Document 18 covers training requirements
+For IT Operations
+* Documents 9, 31-34 cover deployment and operations
+* Document 17 provides system administration guidance
+* Document 33 is essential for disaster recovery planning
+Document Standards
+All documents in this suite follow Harvard Business Review formatting standards:
+* Professional typography using Georgia and Arial fonts
+* Consistent color palette with burgundy accents
+* Structured headings and subheadings
+* Professional tables for structured data
+* Bulleted and numbered lists for clarity
+* Page headers and footers with document identification
+* Cover pages with document metadata
+Version Control
+This documentation suite is version controlled:
+* Current Version: 1.0
+* Release Date: April 2026
+* Next Review: Upon project milestone completion
+* Change Log: Maintained in each document
+Document Ownership
+Murivest Realty Ltd. - Enterprise Software Division
+For questions or updates to this documentation suite, contact the Project Management Office.
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+PROJECT CHARTER
+Murivest OS
+Unified Company Operating System
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+Executive Summary
+Murivest OS represents a transformative enterprise software initiative designed to unify all Murivest Realty operations under a single, integrated platform. This project charter establishes the formal authorization, scope, objectives, and governance framework for developing a comprehensive company operating system that will serve as the digital backbone of Murivest Realty.
+1. Project Overview
+1.1 Project Identification
+Project NameMurivest OS (Unified Operations & Capital Platform)Project SponsorMark Muriithi, Founder & CEO, Murivest Realty Ltd.Project OwnerMurivest Executive OfficeProject TypeEnterprise Software Platform DevelopmentProject StatusAuthorized for DevelopmentDocument Version1.0 - April 20261.2 Project Description
+Murivest OS is a unified, enterprise-grade software platform designed to centralize all operations, knowledge systems, client management, and financial processes within Murivest Realty. The system integrates:
+* Sales (CRM & deal pipeline management)
+* Property & mandate management
+* Investor relations & capital tracking
+* Marketing systems & campaign management
+* Accounting & financial reporting
+* Operations & workflow automation
+* Training (Murivest Academy)
+* Knowledge systems (Executive Capital Suite)
+* External portals (Investor, Landlord, Tenant)
+2. Business Objectives
+2.1 Primary Objectives
+Create a Unified Platform: Establish one comprehensive system for all Murivest operations, eliminating fragmented tools and manual processes.
+Increase Deal Flow & Conversion: Implement structured CRM with investor matching and pipeline visibility to accelerate deal closure.
+Standardize Operations: Tie every process to documented playbooks and enforce execution through software workflows.
+Improve Investor Experience: Deploy dedicated investor portal with controlled access to opportunities and portfolio reporting.
+Enable Data-Driven Decisions: Provide real-time dashboards across all departments for strategic decision-making.
+Scale the Company Efficiently: Reduce reliance on manual processes and individual knowledge through institutional systems.
+3. Scope of the Project
+3.1 In Scope
+Internal Systems
+* CRM (Sales + Investor Relations)
+* Property & Mandate Management
+* Deal Management System
+* Marketing & Campaign Management
+* Accounting & Finance Module
+* Operations & Workflow Engine
+* HR & Performance Tracking
+* Meeting & Task Management
+* Document Management System
+Knowledge & Training
+* Murivest Executive Capital Suite
+* Murivest Academy (Training & Certification)
+External Portals
+* Investor Portal
+* Landlord Portal
+* Tenant Portal
+Integrations
+* Website (property listings sync)
+* Email & communication tracking
+* File/document storage
+* Analytics dashboards
+3.2 Out of Scope (Phase 1)
+* Mobile native applications (web-first initially)
+* Advanced AI automation (future phase)
+* External public marketplace features
+* Third-party brokerage integrations
+4. Stakeholders
+4.1 Primary Stakeholders
+* Mark Muriithi (Founder / Executive)
+* Murivest Management Team
+* Sales Team (Relationship Managers)
+* Investor Relations Team
+* Operations Team
+* Finance Team
+4.2 Secondary Stakeholders
+* Investors (UHNWI / Institutional)
+* Property Owners (Landlords)
+* Tenants
+* Marketing Team
+* IT / Development Team
+5. Success Criteria
+Operational Success
+* 100% of deals tracked within system
+* 100% of mandates recorded digitally
+* All departments using platform daily
+Performance Success
+* Increase in deal conversion rate
+* Faster response time to investors
+* Reduced deal cycle duration
+Financial Success
+* Improved revenue tracking accuracy
+* Accurate commission calculations
+* Clear visibility of cash flow
+Adoption Success
+* All employees onboarded into system
+* Training completion via Murivest Academy
+* Reduced reliance on external tools
+6. Key Deliverables
+* Fully functional Murivest OS platform
+* Admin Command Center with full visibility
+* CRM & Deal Management System
+* Property & Mandate Database
+* Investor / Landlord / Tenant Portals
+* Accounting & Finance System
+* Murivest Executive Capital Suite (digital library)
+* Murivest Academy (training system)
+* Reporting & Analytics dashboards
+* Complete documentation & training materials
+7. Timeline & Phases
+Phase 1: Foundation (Months 1-3)
+* Identity and permissions framework
+* Admin core functionality
+* CRM system
+* Property & mandate module
+* Website sync
+* Basic dashboards
+Phase 2: Expansion (Months 4-6)
+* Investor portal
+* Landlord portal
+* Marketing campaigns system
+* Workflow engine
+* Document management
+Phase 3: Institutionalization (Months 7-9)
+* Accounting system integration
+* Training academy
+* Executive Capital Suite
+* Advanced reporting & BI
+8. Budget & Resource Allocation
+8.1 Estimated Cost Categories
+* Software Development (Frontend + Backend)
+* UI/UX Design
+* Infrastructure (Cloud hosting, storage)
+* Security & compliance setup
+* Testing & QA
+* Maintenance & upgrades
+8.2 Human Resources Required
+* Software Engineers (Frontend + Backend)
+* UI/UX Designers
+* Product Manager
+* QA/Test Engineers
+* DevOps Engineer
+* Security Specialist
+9. Risks & Mitigation
+RiskImpactMitigation StrategyLow user adoptionHighPhased rollout with comprehensive training via Murivest AcademySystem complexityMediumModular architecture with iterative developmentData migration challengesMediumProgressive migration with validation checkpointsIntegration failuresMediumAPI-first design with comprehensive testing10. Approval
+This document represents the formal authorization to initiate the Murivest OS project. By approving this charter, the project sponsor confirms the business case, scope, objectives, and resource allocation as outlined herein.
+
+Approved by:
+
+_______________________________
+Mark Muriithi
+Founder & CEO, Murivest Realty Ltd.
+Date: _______________
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+SRS DOCUMENT
+Software Requirements Specification
+Complete Technical Requirements for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This Software Requirements Specification (SRS) document provides a comprehensive description of the Murivest OS platform. It outlines functional and non-functional requirements, system constraints, and acceptance criteria for the development team.
+1.2 Scope
+Murivest OS is an enterprise-grade unified platform encompassing CRM, property management, investor relations, marketing, finance, operations, training, and external stakeholder portals. This document covers all modules and their interdependencies.
+1.3 Definitions & Acronyms
+Term/AcronymDefinitionCRMCustomer Relationship ManagementAPIApplication Programming InterfaceRBACRole-Based Access ControlKYCKnow Your CustomerNDANon-Disclosure AgreementATSAuthority to SellLOILetter of IntentUHNWIUltra High Net Worth IndividualBIBusiness IntelligenceSOPStandard Operating ProcedureLMSLearning Management System2. Overall Description
+2.1 Product Perspective
+Murivest OS is a self-contained enterprise platform that replaces fragmented systems with a unified architecture. It serves as the central nervous system for Murivest Realty, connecting all departments and external stakeholders.
+2.2 Product Functions
+* Identity & Access Management with RBAC
+* CRM & Sales Pipeline Management
+* Property, Unit & Mandate Management
+* Investor Database & Portal
+* Landlord Database & Portal
+* Tenant Database & Portal
+* Marketing & Campaign Management
+* Accounting & Finance System
+* Operations & Workflow Engine
+* HR & Performance Tracking
+* Learning Management (Murivest Academy)
+* Executive Capital Suite (Knowledge Hub)
+* Document Management System
+* Meeting & Task Management
+* Analytics & BI Dashboards
+3. System Features
+3.1 CRM & Sales Module
+Lead Capture & Management [HIGH]: System shall capture leads from multiple sources (website, campaigns, referrals) with automatic deduplication and source attribution.
+Contact Management [HIGH]: System shall maintain comprehensive contact profiles including communication history, preferences, and relationship scoring.
+Pipeline Management [HIGH]: System shall provide customizable deal stages with automated progression rules and stage-gate approvals.
+Property Matching [HIGH]: System shall match investor preferences with available properties using configurable criteria.
+Activity Tracking [MEDIUM]: System shall log all calls, emails, meetings, and WhatsApp interactions with timestamp and user attribution.
+Commission Tracking [HIGH]: System shall calculate commissions based on deal value, agent split, and company policies.
+Sales Reporting [MEDIUM]: System shall generate performance dashboards showing leads, conversions, pipeline value, and forecasts.
+3.2 Property & Mandate Module
+Property Master Record [HIGH]: System shall maintain comprehensive property profiles including location, specifications, images, documents, and valuation history.
+Mandate Management [HIGH]: System shall track Authority to Sell agreements with expiry alerts, exclusivity status, and commission terms.
+Listing Management [HIGH]: System shall control property visibility (public/private/off-market) with approval workflows for website publishing.
+Document Vault [HIGH]: System shall store and version-control all property-related documents with permission-based access.
+Valuation Tracking [MEDIUM]: System shall record property valuations, asking prices, and offer history.
+Tenancy Schedule [MEDIUM]: System shall maintain current tenant information, lease terms, and rental income for income-producing properties.
+3.3 Investor Portal
+Investor Authentication [HIGH]: Portal shall provide secure login with MFA support and session management.
+Personalized Dashboard [HIGH]: Portal shall display relevant opportunities based on investor preferences and history.
+Investment Memos [HIGH]: Portal shall provide access to sanitized investment memoranda with download tracking.
+Portfolio View [HIGH]: Portal shall display investor's current investments, distributions, and performance metrics.
+Due Diligence Room [MEDIUM]: Portal shall provide secure document access for active investment opportunities.
+Communication Center [MEDIUM]: Portal shall enable direct communication with relationship managers and meeting booking.
+Watchlist & Saved Assets [LOW]: Portal shall allow investors to save and track properties of interest.
+3.4 Finance & Accounting Module
+Chart of Accounts [HIGH]: System shall maintain company chart of accounts with department allocation.
+General Ledger [HIGH]: System shall record all financial transactions with audit trails and reconciliation support.
+Invoice Management [HIGH]: System shall generate, track, and manage invoices with automated reminders.
+Commission Calculation [HIGH]: System shall automatically calculate and track commission payments based on closed deals.
+AR/AP Management [MEDIUM]: System shall track accounts receivable and payable with aging reports.
+Financial Reporting [HIGH]: System shall generate P&L, balance sheet, cash flow, and departmental profitability reports.
+Tax Support [MEDIUM]: System shall support tax calculations, withholding, and VAT reporting as applicable.
+4. External Interface Requirements
+4.1 User Interfaces
+The system shall provide responsive web interfaces for all user roles with consistent navigation patterns, accessible design (WCAG 2.1 AA), and support for modern browsers (Chrome, Firefox, Safari, Edge).
+4.2 Hardware Interfaces
+No specific hardware interfaces required. Standard computing devices with internet connectivity are sufficient.
+4.3 Software Interfaces
+* Email service integration (SMTP/IMAP)
+* File storage service (cloud-based)
+* Payment processing APIs
+* SMS/WhatsApp gateway integration
+* Analytics and BI tools
+5. Non-Functional Requirements
+5.1 Performance Requirements
+* Page load time shall not exceed 3 seconds under normal load
+* System shall support 500 concurrent users with acceptable performance
+* Database queries shall complete within 2 seconds for standard operations
+* Report generation shall complete within 30 seconds for complex queries
+5.2 Security Requirements
+* All data transmission shall use TLS 1.3 encryption
+* Passwords shall be hashed using bcrypt with appropriate work factor
+* System shall implement RBAC with principle of least privilege
+* All sensitive operations shall be logged with audit trails
+* System shall support MFA for privileged accounts
+* Data shall be encrypted at rest using AES-256
+5.3 Availability & Reliability
+* System shall maintain 99.9% uptime (excluding scheduled maintenance)
+* Automated backups shall occur daily with 30-day retention
+* Disaster recovery procedures shall enable restoration within 4 hours
+* System shall gracefully handle component failures without data loss
+6. Data Requirements
+6.1 Data Models
+EntityDescriptionUserSystem users with authentication credentials and role assignmentsContactExternal contacts including investors, landlords, tenants, prospectsCompanyOrganizations including investor entities, property ownership structuresPropertyReal estate assets with location, specifications, and statusUnitIndividual units within multi-unit propertiesMandateAuthority to Sell agreements with terms and conditionsDealTransaction opportunities with stages and valuesTaskAction items with assignments, due dates, and statusDocumentFiles with metadata, versioning, and permissionsCampaignMarketing initiatives with tracking and analyticsAppendix A: Acceptance Criteria
+Acceptance criteria shall be defined for each user story during sprint planning. General acceptance criteria include:
+* Feature functions as specified without critical defects
+* Code passes peer review and security scan
+* Unit test coverage meets minimum 80% threshold
+* Feature passes UAT with stakeholder sign-off
+* Documentation is complete and accurate
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+ARCHITECTURE
+System Architecture Document
+Technical Architecture for Murivest OS Platform
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+Executive Summary
+This document presents the comprehensive system architecture for Murivest OS, an enterprise-grade unified platform for real estate operations. The architecture follows a modular, API-first design with clear separation of concerns, enabling scalability, maintainability, and security.
+1. Architectural Overview
+1.1 Design Principles
+Modularity: System is composed of independent, loosely-coupled modules that can be developed, deployed, and scaled independently.
+API-First: All functionality is exposed through well-defined APIs, enabling integration and future extensibility.
+Single Source of Truth: Master data is centralized with controlled access points to ensure consistency.
+Security by Design: Security is integrated at every layer, not bolted on as an afterthought.
+Scalability: Architecture supports horizontal scaling to accommodate growth.
+2. System Architecture Layers
+Layer 1: Identity & Security
+* Authentication service with MFA support
+* Authorization engine with RBAC
+* Session management and token handling
+* Audit logging for all security events
+* API gateway with rate limiting
+Layer 2: Core Master Data
+* User management service
+* Contact and company registry
+* Property master records
+* Document metadata store
+* Task and activity repository
+Layer 3: Business Modules
+* CRM service
+* Property management service
+* Investor relations service
+* Marketing campaign service
+* Finance and accounting service
+Layer 4: Workflow Engine
+* Approval workflow orchestrator
+* Notification dispatcher
+* Task scheduler
+* Escalation manager
+Layer 5: Content & Knowledge
+* Document storage service
+* Learning management service
+* Knowledge base repository
+Layer 6: Reporting & Analytics
+* Data warehouse
+* BI query engine
+* Dashboard service
+* Report generator
+Layer 7: External Portals
+* Investor portal application
+* Landlord portal application
+* Tenant portal application
+* Public website integration
+3. Technology Stack
+3.1 Frontend
+* React.js with TypeScript
+* Tailwind CSS
+* Redux for state management
+* Recharts for visualizations
+3.2 Backend
+* Node.js with Express/NestJS
+* Python for data processing
+* GraphQL API layer
+* RESTful APIs
+3.3 Database
+* PostgreSQL (primary relational)
+* Redis (caching)
+* MongoDB (document store)
+* ClickHouse (analytics)
+3.4 Infrastructure
+* Docker containers
+* Kubernetes orchestration
+* AWS/GCP cloud
+* Terraform for IaC
+3.5 Security
+* OAuth 2.0 / OpenID Connect
+* JWT tokens
+* HashiCorp Vault
+* WAF protection
+4. Data Architecture
+4.1 Database Strategy
+Murivest OS employs a polyglot persistence strategy with specialized databases for different data types:
+Primary Operational Database (PostgreSQL): Stores transactional data: users, contacts, properties, deals, tasks. Supports ACID transactions and complex relationships.
+Document Store (MongoDB): Stores unstructured content: manuals, training materials, knowledge base articles.
+Cache Layer (Redis): Stores session data, frequently accessed records, and computed aggregates.
+Analytics Warehouse (ClickHouse): Stores time-series data for reporting and BI queries with columnar optimization.
+File Storage (S3-compatible): Stores binary files: images, PDFs, videos with CDN distribution.
+5. Integration Architecture
+5.1 API Gateway
+All external and internal API requests flow through a centralized API gateway that provides:
+* Authentication and authorization
+* Rate limiting and throttling
+* Request/response transformation
+* Caching
+* Logging and monitoring
+5.2 Event-Driven Architecture
+Key business events are published to a message broker (Apache Kafka/RabbitMQ) enabling:
+* Asynchronous processing
+* Cross-module communication
+* Event sourcing for audit trails
+* Real-time notifications
+6. Security Architecture
+6.1 Authentication Flow
+1. User submits credentials to Identity Provider
+2. Identity Provider validates credentials and issues JWT access token
+3. Client includes token in API request headers
+4. API Gateway validates token signature and expiration
+5. Gateway enriches request with user context
+6. Backend service authorizes action based on user roles
+6.2 Data Protection
+* Encryption in transit: TLS 1.3 for all communications
+* Encryption at rest: AES-256 for database and file storage
+* Field-level encryption for PII and sensitive data
+* Key management through dedicated HSM/Vault
+7. Deployment Architecture
+7.1 Environment Strategy
+Development: Individual developer environments with local databases
+Staging: Production-like environment for integration testing
+Production: Multi-region deployment with high availability
+7.2 Scaling Strategy
+Horizontal scaling through container orchestration:
+* Auto-scaling based on CPU/memory metrics
+* Database read replicas for query scaling
+* CDN for static asset delivery
+* Caching layers to reduce database load
+Appendix A: Architecture Decision Records
+ADR-001: Microservices vs Monolith
+Decision: Start with modular monolith, extract services as needed. Rationale: Faster initial development, lower operational complexity.
+ADR-002: PostgreSQL as Primary Database
+Decision: Use PostgreSQL for primary operational data. Rationale: ACID compliance, rich feature set, strong ecosystem.
+ADR-003: API-First Design
+Decision: Design all functionality through APIs first. Rationale: Enables multiple client types, supports integration.
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+DATABASE DESIGN
+Database Design Document
+Data Model & Schema Specification for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document defines the database design for Murivest OS, including entity-relationship models, schema definitions, and data management strategies.
+1.2 Database Selection
+Murivest OS employs a polyglot persistence architecture:
+PostgreSQL 15+: Primary operational database for transactional data
+MongoDB 6+: Document store for unstructured content
+Redis 7+: Caching and session storage
+ClickHouse: Analytics warehouse for reporting
+2. Entity Relationship Model
+2.1 Core Entities
+EntityPrimary KeyDescriptionusersid (UUID)System users with authentication credentialscontactsid (UUID)External contacts (investors, landlords, tenants, prospects)companiesid (UUID)Organizations and legal entitiespropertiesid (UUID)Real estate assetsunitsid (UUID)Individual units within propertiesmandatesid (UUID)Authority to Sell agreementsdealsid (UUID)Transaction opportunitiestasksid (UUID)Action items and activitiesdocumentsid (UUID)File metadata and storage referencescampaignsid (UUID)Marketing initiatives3. Detailed Schema Definitions
+3.1 users Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifieremailVARCHAR(255)UNIQUE, NOT NULLLogin email addresspassword_hashVARCHAR(255)NOT NULLBcrypt hashed passwordfirst_nameVARCHAR(100)NOT NULLFirst namelast_nameVARCHAR(100)NOT NULLLast namerole_idUUIDFKReference to roles tabledepartment_idUUIDFKReference to departments tablephoneVARCHAR(20)NULLContact phone numberis_activeBOOLEANDEFAULT TRUEAccount statuslast_login_atTIMESTAMPNULLLast successful logincreated_atTIMESTAMPDEFAULT NOW()Record creation timestampupdated_atTIMESTAMPDEFAULT NOW()Last update timestamp3.2 contacts Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifiercontact_typeENUMNOT NULLType: investor, landlord, tenant, prospect, vendorfirst_nameVARCHAR(100)NOT NULLFirst namelast_nameVARCHAR(100)NOT NULLLast nameemailVARCHAR(255)UNIQUEEmail addressphoneVARCHAR(20)NULLPrimary phonecompany_idUUIDFKAssociated companyassigned_user_idUUIDFKAssigned relationship managerstatusVARCHAR(50)DEFAULT "active"Contact statussourceVARCHAR(100)NULLLead sourcenotesTEXTNULLInternal notescreated_atTIMESTAMPDEFAULT NOW()Creation timestampupdated_atTIMESTAMPDEFAULT NOW()Update timestamp3.3 properties Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifierproperty_nameVARCHAR(255)NOT NULLProperty name/titleproperty_typeENUMNOT NULLType: office, retail, industrial, residential, land, mixed-useaddressTEXTNOT NULLFull addresscityVARCHAR(100)NOT NULLCitycountryVARCHAR(100)NOT NULLCountrylatitudeDECIMAL(10,8)NULLGPS latitudelongitudeDECIMAL(11,8)NULLGPS longitudetotal_area_sqmDECIMAL(12,2)NULLTotal area in square meterslandlord_idUUIDFKProperty owner referencestatusENUMNOT NULLStatus: available, under_offer, sold, off_marketasking_priceDECIMAL(15,2)NULLAsking priceyield_percentDECIMAL(5,2)NULLRental yield percentageoccupancy_rateDECIMAL(5,2)NULLCurrent occupancy percentagewebsite_visibleBOOLEANDEFAULT FALSEVisible on public websitecreated_atTIMESTAMPDEFAULT NOW()Creation timestampupdated_atTIMESTAMPDEFAULT NOW()Update timestamp3.4 mandates Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifierproperty_idUUIDFKReference to propertymandate_typeENUMNOT NULLType: exclusive, open, solestart_dateDATENOT NULLMandate start dateexpiry_dateDATENOT NULLMandate expiry datecommission_percentDECIMAL(5,2)NOT NULLCommission percentageminimum_commissionDECIMAL(15,2)NULLMinimum commission amountstatusENUMNOT NULLStatus: active, expired, terminated, convertedsigned_agreement_urlVARCHAR(500)NULLURL to signed agreement documentcreated_byUUIDFKUser who created mandatecreated_atTIMESTAMPDEFAULT NOW()Creation timestamp3.5 deals Table
+ColumnTypeConstraintsDescriptionidUUIDPKUnique identifierdeal_nameVARCHAR(255)NOT NULLDeal name/referenceproperty_idUUIDFKReference to propertybuyer_contact_idUUIDFKBuyer/investor contactseller_contact_idUUIDFKSeller/landlord contactdeal_valueDECIMAL(15,2)NULLTransaction valuecommission_amountDECIMAL(15,2)NULLCommission earnedstageENUMNOT NULLStage: lead, qualified, site_visit, offer, negotiation, closing, closed_won, closed_lostprobabilityINTEGERDEFAULT 0Win probability percentageexpected_close_dateDATENULLExpected closing dateactual_close_dateDATENULLActual closing dateassigned_user_idUUIDFKAssigned deal ownercreated_atTIMESTAMPDEFAULT NOW()Creation timestampupdated_atTIMESTAMPDEFAULT NOW()Update timestamp4. Key Relationships
+From TableForeign KeyTo TablePrimary KeyRelationshipusersdepartment_iddepartmentsidMany-to-Oneusersrole_idrolesidMany-to-Onecontactscompany_idcompaniesidMany-to-Onecontactsassigned_user_idusersidMany-to-Onepropertieslandlord_idcontactsidMany-to-Onemandatesproperty_idpropertiesidMany-to-Onedealsproperty_idpropertiesidMany-to-Onedealsbuyer_contact_idcontactsidMany-to-Onedealsassigned_user_idusersidMany-to-One5. Indexing Strategy
+Index NameColumnsPurposeusers_email_idxusers(email)Unique login lookupcontacts_type_idxcontacts(contact_type)Filter by contact typecontacts_assigned_idxcontacts(assigned_user_id)Find contacts by RMproperties_status_idxproperties(status)Filter available propertiesproperties_location_idxproperties(city, country)Location-based searchmandates_expiry_idxmandates(expiry_date)Find expiring mandatesdeals_stage_idxdeals(stage)Pipeline filteringdeals_assigned_idxdeals(assigned_user_id)User deal lookupdeals_close_date_idxdeals(expected_close_date)Forecast queries6. Data Retention & Archival
+Data retention policies ensure optimal database performance while maintaining compliance:
+* Activity logs: 2 years (archive to cold storage after 1 year)
+* Audit trails: 7 years (regulatory requirement)
+* Deleted records: Soft delete with 90-day grace period
+* Session data: 30 days maximum
+* Analytics data: Indefinite retention in warehouse
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+API SPECIFICATION
+API Specification Document
+RESTful API & GraphQL Schema for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 API Overview
+Murivest OS exposes functionality through both RESTful APIs and GraphQL. This document specifies endpoints, request/response formats, authentication, and error handling.
+1.2 Base URLs
+Production: https://api.murivest.com/v1
+Staging: https://api-staging.murivest.com/v1
+Development: https://api-dev.murivest.com/v1
+2. Authentication
+2.1 OAuth 2.0 Flow
+All API requests require authentication via OAuth 2.0 Bearer tokens:
+* POST /auth/login - Submit credentials to receive access token
+* Include token in Authorization header: Bearer {token}
+* Token expires after 24 hours; use refresh token to obtain new access token
+* Include X-API-Key header for application identification
+2.2 Authentication Endpoints
+EndpointDescriptionPOST /auth/loginAuthenticate user and return tokensPOST /auth/refreshRefresh expired access tokenPOST /auth/logoutInvalidate user sessionPOST /auth/forgot-passwordInitiate password resetPOST /auth/reset-passwordComplete password reset3. User Management API
+3.1 User Endpoints
+EndpointDescriptionGET /usersList all users with pagination and filteringGET /users/{id}Get user by IDPOST /usersCreate new userPUT /users/{id}Update user informationDELETE /users/{id}Deactivate user (soft delete)GET /users/{id}/profileGet user profile with permissionsPUT /users/{id}/passwordChange user password3.2 Request/Response Example
+POST /users
+Request Body:
+{
+  "email": "john.doe@murivest.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "role_id": "550e8400-e29b-41d4-a716-446655440000",
+  "department_id": "550e8400-e29b-41d4-a716-446655440001",
+  "phone": "+254712345678"
+}
+Response (201 Created):
+{
+  "id": "550e8400-e29b-41d4-a716-446655440002",
+  "email": "john.doe@murivest.com",
+  "first_name": "John",
+  "last_name": "Doe",
+  "role": {
+    "id": "550e8400-e29b-41d4-a716-446655440000",
+    "name": "Sales Manager"
+  },
+  "department": {
+    "id": "550e8400-e29b-41d4-a716-446655440001",
+    "name": "Sales"
+  },
+  "is_active": true,
+  "created_at": "2026-04-10T10:30:00Z"
+}
+4. Contacts API
+4.1 Contact Endpoints
+EndpointDescriptionGET /contactsList contacts with filtering by type, status, assigned userGET /contacts/{id}Get contact details with related dataPOST /contactsCreate new contactPUT /contacts/{id}Update contact informationDELETE /contacts/{id}Delete contactGET /contacts/{id}/activitiesGet contact activity historyPOST /contacts/{id}/activitiesLog activity against contactGET /contacts/{id}/dealsGet deals associated with contact5. Properties API
+5.1 Property Endpoints
+EndpointDescriptionGET /propertiesList properties with filters (type, status, location, price range)GET /properties/{id}Get property details with units, documents, historyPOST /propertiesCreate new propertyPUT /properties/{id}Update property informationDELETE /properties/{id}Delete propertyGET /properties/{id}/mandatesGet mandates for propertyGET /properties/{id}/dealsGet deals for propertyPOST /properties/{id}/publishPublish property to website6. Deals API
+6.1 Deal Endpoints
+EndpointDescriptionGET /dealsList deals with pipeline filteringGET /deals/{id}Get deal details with timelinePOST /dealsCreate new dealPUT /deals/{id}Update deal informationPUT /deals/{id}/stageMove deal to new stageGET /deals/pipelineGet pipeline summary by stageGET /deals/forecastGet revenue forecast7. Error Handling
+7.1 HTTP Status Codes
+Status CodeDescription200 OKRequest successful201 CreatedResource created successfully400 Bad RequestInvalid request parameters401 UnauthorizedAuthentication required403 ForbiddenInsufficient permissions404 Not FoundResource not found422 Unprocessable EntityValidation errors429 Too Many RequestsRate limit exceeded500 Internal Server ErrorServer error7.2 Error Response Format
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "The request failed validation",
+    "details": [
+      {
+        "field": "email",
+        "message": "Email address is required"
+      }
+    ]
+  }
+}
+8. Rate Limiting
+API requests are subject to rate limiting to ensure fair usage:
+Standard Tier: 100 requests/minute, 10,000 requests/day
+Premium Tier: 500 requests/minute, 100,000 requests/day
+Internal Tier: Unlimited (internal applications only)
+9. GraphQL API
+9.1 GraphQL Endpoint
+GraphQL endpoint: POST /graphql
+9.2 Example Query
+query GetPropertyWithDeals($id: ID!) {
+  property(id: $id) {
+    id
+    propertyName
+    askingPrice
+    status
+    landlord {
+      firstName
+      lastName
+      email
+    }
+    deals {
+      id
+      dealValue
+      stage
+      buyer {
+        firstName
+        lastName
+      }
+    }
+  }
+}
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+UI DESIGN
+User Interface Design Document
+UI/UX Specifications & Design System for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Design Philosophy
+1.1 Design Principles
+Clarity: Every interface element should have a clear purpose. Avoid visual clutter and unnecessary decoration.
+Efficiency: Design for productivity. Common tasks should be accessible within 2 clicks.
+Consistency: Use consistent patterns, terminology, and behaviors across all modules.
+Accessibility: Design for all users. Meet WCAG 2.1 AA standards for accessibility.
+Responsiveness: Interfaces should work seamlessly across desktop, tablet, and mobile devices.
+2. Design System
+2.1 Color Palette
+RoleHex CodeNameUsagePrimary#1E3A5FDeep NavyHeaders, primary buttons, key actionsSecondary#C9A227GoldAccents, highlights, premium indicatorsSuccess#28A745GreenSuccess states, positive metricsWarning#FFC107AmberWarnings, attention neededDanger#DC3545RedErrors, destructive actionsInfo#17A2B8TealInformational messagesBackground#F8F9FALight GrayPage backgroundsSurface#FFFFFFWhiteCards, panels, inputsText Primary#212529Near BlackPrimary textText Secondary#6C757DGraySecondary text, labels2.2 Typography
+ElementFontSizeWeightUsageH1Inter32px700Page titlesH2Inter24px600Section headersH3Inter20px600Subsection headersH4Inter18px500Card titlesBodyInter14px400Primary body textBody SmallInter12px400Secondary text, captionsButtonInter14px500Button labelsLabelInter12px500Form labels2.3 Spacing System
+TokenValueUsagexs4pxTight spacing, icon paddingsm8pxSmall gaps, inline elementsmd16pxStandard spacing, card paddinglg24pxSection spacingxl32pxLarge section gaps2xl48pxPage section separators3. Component Library
+3.1 Buttons
+VariantStyleUsagePrimarySolid navy background, white textMain CTAs, save actionsSecondaryWhite background, navy borderCancel, secondary actionsTertiaryNo background, navy textText links, subtle actionsDangerSolid red background, white textDelete, destructive actionsGhostTransparent, gray textIcon buttons, toolbars3.2 Form Components
+Text Input: Single-line text entry with label and optional helper text
+Textarea: Multi-line text entry for longer content
+Select: Dropdown selection from predefined options
+Multi-Select: Multiple selection with tag display
+Checkbox: Boolean selection, single or grouped
+Radio Group: Single selection from mutually exclusive options
+Date Picker: Calendar-based date selection
+File Upload: Drag-and-drop or click-to-select file upload
+Toggle Switch: On/off state toggle
+Search Input: Text input with search icon and autocomplete
+3.3 Data Display Components
+Data Table: Sortable, filterable tabular data with pagination
+Card: Container for grouped content with optional actions
+Stat Card: Display key metrics with trend indicators
+Chart: Visual data representation (line, bar, pie, area)
+Timeline: Chronological display of events or activities
+Avatar: User/profile image display with fallback initials
+Badge: Status indicators and labels
+Progress Bar: Visual progress indication
+4. Layout Patterns
+4.1 Application Shell
+The application shell provides consistent navigation and context:
+* Top Navigation Bar: Logo, global search, notifications, user menu
+* Sidebar Navigation: Module links with expandable sections
+* Main Content Area: Dynamic content based on current route
+* Contextual Sidebar: Optional right panel for details/filters
+4.2 Page Layouts
+Dashboard Layout: Grid of stat cards, charts, and activity feeds
+List Layout: Filter bar, data table, bulk action toolbar
+Detail Layout: Header with actions, tabbed content sections
+Form Layout: Single or multi-column form with action footer
+Split Layout: Master-detail view with list and detail panels
+5. Module Interface Specifications
+5.1 CRM Module
+* Contact List: Table view with quick filters, sorting, and bulk actions
+* Contact Detail: Profile header, activity timeline, related deals/properties
+* Deal Pipeline: Kanban board with drag-and-drop stage progression
+* Deal Detail: Stage history, associated contacts, documents, tasks
+5.2 Property Module
+* Property Grid: Card-based grid with image, key specs, and status
+* Property Detail: Image gallery, specifications, documents, mandates
+* Mandate Manager: List view with expiry alerts and commission terms
+* Listing Publisher: Workflow for approving and publishing to website
+5.3 Finance Module
+* Dashboard: Cash position, receivables, payables, profit/loss summary
+* Transaction List: Filterable table with categorization and reconciliation
+* Invoice Manager: Create, send, and track invoices with payment status
+* Reports: P&L, Balance Sheet, Cash Flow with export options
+6. Responsive Design
+6.1 Breakpoints
+DeviceWidthBehaviorMobile< 640pxSingle column, stacked navigation, simplified viewsTablet640px - 1024pxTwo columns, collapsible sidebarDesktop1024px - 1440pxFull layout, three-column where appropriateLarge Desktop> 1440pxMaximum content width with centered layout7. Accessibility Requirements
+* All interactive elements must be keyboard accessible
+* Color contrast ratios must meet WCAG AA standards (4.5:1 for text)
+* Form inputs must have associated labels
+* Images must have descriptive alt text
+* Focus states must be clearly visible
+* Screen reader announcements for dynamic content updates
+* Support for browser zoom up to 200%
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+SECURITY
+Security & Compliance Document
+Security Framework, Policies & Compliance for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+Executive Summary
+This document outlines the comprehensive security framework for Murivest OS, including authentication, authorization, data protection, and compliance requirements. Security is designed into every layer of the platform to protect sensitive business and client data.
+1. Security Architecture
+1.1 Defense in Depth
+Murivest OS implements defense in depth with multiple security layers:
+Perimeter Layer: WAF, DDoS protection, network segmentation
+Application Layer: Authentication, authorization, input validation
+Data Layer: Encryption, access controls, audit logging
+Infrastructure Layer: Secure configuration, monitoring, patching
+2. Authentication Framework
+2.1 Authentication Methods
+Password Authentication: Minimum 12 characters, complexity requirements, bcrypt hashing
+Multi-Factor Authentication (MFA): TOTP-based MFA for privileged accounts, optional for standard users
+Single Sign-On (SSO): SAML 2.0 and OIDC support for enterprise integrations
+API Authentication: OAuth 2.0 with JWT tokens, API key validation
+2.2 Session Management
+* Access tokens expire after 24 hours
+* Refresh tokens expire after 7 days of inactivity
+* Sessions invalidated on password change or logout
+* Concurrent session limits per user account
+* Automatic session termination after 30 minutes of inactivity
+3. Authorization Framework
+3.1 Role-Based Access Control (RBAC)
+Permissions are granted through roles assigned to users. The system supports hierarchical roles with inheritance.
+RolePermissionsSuper AdminFull system access including user management and configurationExecutiveCross-department visibility with approval authoritiesDepartment HeadFull access to department data and team managementManagerAccess to team data with limited administrative functionsStandard UserAccess to assigned records and standard operationsRead-OnlyView access only, no modification capabilities3.2 Resource-Level Permissions
+Beyond role-based access, the system implements resource-level permissions:
+* Ownership: User who created a record has full control
+* Assignment: Records can be assigned to specific users
+* Sharing: Records can be shared with individuals or teams
+* Department: Records inherit department visibility rules
+4. Data Protection
+4.1 Encryption Standards
+Data in Transit: TLS 1.3 for all network communications
+Data at Rest: AES-256 encryption for databases and file storage
+Field-Level Encryption: Sensitive PII encrypted at application level
+Key Management: HashiCorp Vault for key storage and rotation
+4.2 Data Classification
+ClassificationDescriptionHandlingPublicInformation intended for public disclosureNo special handlingInternalCompany information for internal use onlyAccess control requiredConfidentialSensitive business information requiring protectionEncryption + access logsRestrictedHighly sensitive data with strict access controlsEncryption + MFA + audit5. Audit & Logging
+5.1 Audit Events
+The system logs all security-relevant events:
+* User authentication (success and failure)
+* Password changes and resets
+* Permission changes
+* Data access (read operations on sensitive data)
+* Data modifications (create, update, delete)
+* Export operations
+* Administrative actions
+5.2 Log Retention
+Security logs: 7 years (regulatory requirement)
+Access logs: 2 years
+Application logs: 90 days
+Error logs: 30 days
+6. Compliance Framework
+6.1 Regulatory Requirements
+Data Protection: Compliance with applicable data protection regulations (GDPR, local laws)
+Financial Regulations: Adherence to financial reporting and record-keeping requirements
+KYC/AML: Support for Know Your Customer and Anti-Money Laundering procedures
+Audit Requirements: Maintain audit trails for regulatory examinations
+6.2 Security Standards
+* OWASP Top 10 mitigation
+* CIS Controls implementation
+* ISO 27001 alignment for information security management
+* Regular security assessments and penetration testing
+7. Incident Response
+7.1 Incident Classification
+SeverityExamplesResponse TimeCriticalData breach, system compromise, ransomware attackImmediateHighUnauthorized access, significant data exposure1 hourMediumPolicy violation, minor security event4 hoursLowSecurity concern, potential vulnerability24 hours7.2 Response Procedures
+* Immediate containment to prevent further damage
+* Notification to security team within 1 hour for critical incidents
+* Forensic preservation of evidence
+* Root cause analysis and remediation
+* Post-incident review and process improvement
+Appendix A: Security Implementation Checklist
+1. □ Authentication system with MFA support implemented
+2. □ RBAC framework with role definitions configured
+3. □ Encryption at rest enabled for all data stores
+4. □ TLS 1.3 enforced for all communications
+5. □ Input validation and output encoding implemented
+6. □ SQL injection prevention measures in place
+7. □ XSS protection headers configured
+8. □ CSRF tokens implemented for state-changing operations
+9. □ Rate limiting configured on API endpoints
+10. □ Security headers (HSTS, CSP, X-Frame-Options) configured
+11. □ Audit logging enabled for all security events
+12. □ Backup and recovery procedures tested
+13. □ Security monitoring and alerting configured
+14. □ Incident response plan documented and tested
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+TESTING
+Testing Strategy Document
+Quality Assurance & Testing Framework for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document defines the comprehensive testing strategy for Murivest OS, ensuring software quality through systematic verification and validation at all development stages.
+1.2 Testing Objectives
+* Verify that all requirements are correctly implemented
+* Identify defects before production deployment
+* Ensure system reliability, performance, and security
+* Validate user experience across all modules
+* Maintain regression test coverage for ongoing development
+2. Testing Levels
+LevelDescriptionToolsCoverage TargetUnit TestingTest individual functions and components in isolation. Focus on logic correctness and edge cases.Jest, pytest80%Integration TestingTest interactions between components and services. Verify API contracts and data flow.Supertest, Postman70%System TestingTest complete system functionality end-to-end. Validate business workflows.Cypress, Playwright60%Performance TestingTest system under expected and peak load conditions.k6, JMeterN/ASecurity TestingIdentify vulnerabilities and verify security controls.OWASP ZAP, Burp SuiteN/AUser Acceptance TestingValidate system meets business requirements with stakeholders.ManualN/A3. Test Types
+3.1 Functional Testing
+Smoke Tests: Quick validation that critical paths work after deployment
+Regression Tests: Verify existing functionality still works after changes
+API Tests: Validate REST and GraphQL endpoints
+UI Tests: Verify user interface behavior and workflows
+Database Tests: Validate data integrity and query correctness
+3.2 Non-Functional Testing
+Load Testing: Verify system handles expected concurrent users
+Stress Testing: Identify breaking points under extreme load
+Endurance Testing: Verify system stability over extended periods
+Security Testing: Vulnerability scanning and penetration testing
+Accessibility Testing: Verify WCAG 2.1 AA compliance
+Compatibility Testing: Cross-browser and device validation
+4. Test Environments
+Development: Individual developer environments for unit testing
+CI/CD Pipeline: Automated test execution on every commit
+Staging: Production-like environment for integration and UAT
+Performance Lab: Dedicated environment for load and stress testing
+5. Test Data Management
+5.1 Data Strategy
+* Use anonymized production data for realistic test scenarios
+* Maintain synthetic data sets for specific test cases
+* Implement data refresh procedures for each test cycle
+* Ensure test data does not contain real PII
+5.2 Data Sets
+Minimal Data Set: Basic records for smoke testing
+Standard Data Set: Typical volume for functional testing
+Large Data Set: High volume for performance testing
+Edge Case Data Set: Boundary values and unusual scenarios
+6. Test Automation
+6.1 Automation Strategy
+Automate tests at appropriate levels to maximize efficiency:
+* Unit tests: 100% automated, run on every commit
+* Integration tests: Automated, run in CI pipeline
+* API tests: Automated, run on deployment to staging
+* UI smoke tests: Automated, run on deployment
+* UI regression tests: Automated, run nightly
+* Performance tests: Automated, run weekly and on major releases
+6.2 CI/CD Integration
+* Pre-commit hooks: Linting and unit tests
+* Pull request: Full unit test suite, code coverage check
+* Merge to main: Integration tests, security scan
+* Staging deployment: Full automated test suite
+* Production deployment: Smoke tests, rollback capability
+7. Defect Management
+7.1 Severity Levels
+SeverityCriteriaResponseCriticalSystem crash, data loss, security breachImmediate fix, halt releaseHighMajor feature broken, workaround difficultFix within 24 hoursMediumFeature partially broken, workaround existsFix within sprintLowMinor issue, cosmeticFix as capacity allows8. Exit Criteria
+8.1 Release Criteria
+* All critical and high defects resolved
+* Code coverage meets minimum thresholds (Unit: 80%, Integration: 70%)
+* All smoke tests passing
+* Performance benchmarks met
+* Security scan shows no critical vulnerabilities
+* UAT sign-off from business stakeholders
+* Documentation complete and reviewed
+9. Test Metrics
+Test Coverage: Percentage of code covered by automated tests
+Defect Density: Number of defects per 1000 lines of code
+Defect Escape Rate: Defects found in production vs testing
+Test Execution Time: Time to complete automated test suite
+Mean Time to Detect: Average time to identify defects
+
+
+MURIVEST REALTY
+Enterprise Software Division
+
+
+
+
+
+
+DEPLOYMENT
+Deployment Plan
+Release Management & Deployment Strategy for Murivest OS
+
+
+
+
+
+
+
+
+Version 1.0
+April 2026
+
+
+1. Introduction
+1.1 Purpose
+This document outlines the deployment strategy for Murivest OS, including environment management, release procedures, rollback plans, and operational considerations.
+1.2 Deployment Principles
+Automation: All deployments should be automated to eliminate human error
+Reproducibility: Any deployment should be reproducible from version control
+Rollback Capability: Every deployment must have a tested rollback procedure
+Minimal Downtime: Deploy with zero or minimal service interruption
+Monitoring: Comprehensive monitoring before, during, and after deployment
+2. Environment Strategy
+2.1 Environment Overview
+EnvironmentPurposeInfrastructureUsageDevelopmentIndividual developer environmentsLocal/DockerFeature developmentIntegrationShared environment for integration testingCloudPR validationStagingProduction mirror for final validationCloudPre-release testingProductionLive customer-facing environmentCloudLive operations2.2 Environment Configuration
+Each environment maintains separate configuration:
+* Database connections and credentials
+* API endpoints and service URLs
+* Feature flags for gradual rollout
+* Logging levels and monitoring endpoints
+* Resource scaling parameters
+3. Deployment Pipeline
+3.1 CI/CD Workflow
+1. Build: Compile code, run unit tests, create artifacts
+2. Security Scan: Static analysis, dependency vulnerability check
+3. Integration Test: Deploy to integration environment, run API tests
+4. Staging Deploy: Deploy to staging, run full test suite
+5. UAT: Business stakeholder validation
+6. Production Deploy: Deploy to production with monitoring
+7. Smoke Test: Verify critical paths in production
+4. Deployment Strategies
+4.1 Blue-Green Deployment
+Primary strategy for zero-downtime deployments:
+* Deploy new version to inactive (green) environment
+* Run smoke tests against green environment
+* Switch traffic from blue to green using load balancer
+* Monitor for issues, keep blue environment available
+* If issues detected, switch traffic back to blue (instant rollback)
+* If successful, decommission blue and prepare for next deployment
+4.2 Rolling Deployment
+Alternative strategy for gradual rollout:
+* Deploy to subset of servers/instances
+* Monitor metrics and error rates
+* Gradually increase rollout percentage (10% → 25% → 50% → 100%)
+* Automatic rollback if error threshold exceeded
+5. Database Migration Strategy
+5.1 Migration Principles
+* Migrations must be backward compatible during deployment
+* Never delete columns or tables in the same release that stops using them
+* Use expand-contract pattern for schema changes
+* All migrations must be reversible where possible
+* Test migrations against production-like data volumes
+5.2 Migration Execution
+* Run migrations before application deployment
+* Use migration locking to prevent concurrent execution
+* Log migration execution and timing
+* Have rollback scripts prepared for each migration
+6. Release Management
+6.1 Release Types
+Release TypeDescriptionFrequencyMajor ReleaseSignificant new features, architectural changesQuarterlyMinor ReleaseNew features, enhancementsMonthlyPatch ReleaseBug fixes, security patchesAs neededHotfixCritical production fixesEmergency6.2 Release Checklist
+□ All features for release completed and tested
+□ Release notes prepared and reviewed
+□ Database migrations tested in staging
+□ Rollback procedure documented and tested
+□ Monitoring and alerting configured
+□ Communication plan executed (stakeholders notified)
+□ Support team briefed on changes
+□ Feature flags configured for gradual rollout
+7. Rollback Procedures
+7.1 Rollback Triggers
+* Critical errors affecting core functionality
+* Performance degradation beyond acceptable thresholds
+* Security vulnerability discovered
+* Data integrity issues
+7.2 Rollback Steps
+1. Stop traffic to new version
+2. Restore previous application version
+3. Rollback database migrations (if applicable)
+4. Verify system functionality
+5. Communicate status to stakeholders
+6. Conduct post-incident review
+8. Deployment Monitoring
+8.1 Key Metrics
+Error Rate: HTTP 5xx errors as percentage of total requests
+Response Time: P50, P95, P99 response times
+Throughput: Requests per second
+Resource Utilization: CPU, memory, disk usage
+Business Metrics: Key transaction completion rates
+8.2 Alerting Thresholds
+MetricThresholdError Rate> 1% for 5 minutesResponse Time P95> 2 seconds for 5 minutesCPU Usage> 80% for 10 minutesMemory Usage> 85% for 10 minutes
+Murivest OS | IT Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Integration Specification
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Data Migration Plan
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Disaster Recovery Plan
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Maintenance & Support Plan
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Project Roadmap
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | CRM Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Property Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Investor Portal Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Landlord Portal Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Tenant Portal Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Marketing Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Finance Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Operations Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Legal Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | HR Module Spec
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Admin User Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Sales User Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Investor Relations Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Marketing Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Finance Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Operations Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | HR Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | IT Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Academy Manual
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Executive Capital Suite
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Documentation Index
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Project Charter
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Software Requirements Specification
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | System Architecture
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Database Design
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | API Specification
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | UI Design Document
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Security & Compliance
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Testing Strategy
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
+Murivest OS | Deployment Plan
+________________________________________________________________________________
+
+Murivest OS | Confidential
+
