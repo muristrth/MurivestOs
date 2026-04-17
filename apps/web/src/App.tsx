@@ -264,7 +264,9 @@ type AcademyCourse = {
   targetAudience?: string;
   prerequisites?: string[];
   learningObjectives?: string[];
+  isActive?: boolean;
   isPublished?: boolean;
+  status?: string;
   createdAt?: string;
 };
 type AcademyLearningPath = {

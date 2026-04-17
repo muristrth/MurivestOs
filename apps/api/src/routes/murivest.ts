@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { getAuth } from "@clerk/express";
 import { Router, type IRouter, type RequestHandler } from "express";
-import { eq } from "drizzle-orm";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { z } from "zod/v4";
 import {
   activityTable,
@@ -10,7 +10,6 @@ import {
   contactsTable,
   dealsTable,
   documentsTable,
-  expensesTable,
   expensesTable,
   financeRecordsTable,
   insertCompanySchema,
@@ -28,10 +27,7 @@ import {
   insertTaskSchema,
   investorsTable,
   invoicesTable,
-  invoicesTable,
   legalMattersTable,
-  mandatesTable,
-  meetingsTable,
   mandatesTable,
   meetingsTable,
   notificationsTable,
@@ -40,7 +36,6 @@ import {
   tasksTable,
   usersTable,
   campaignsTable,
-  investorsTable,
   insertCampaignSchema,
   insertInvestorSchema,
   db,
@@ -102,18 +97,19 @@ const ContactBody = insertContactSchema
     contactType: z.string().min(1),
   });
 
-const PropertyBody = insertPropertySchema
-  .omit({ id: true, mandateHealth: true })
-  .extend({
-    title: z.string().min(1),
-    propertyType: z.string().min(1),
-    country: z.string().min(1),
-    city: z.string().min(1),
-  });
+const PropertyBody = insertPropertySchema.omit({ id: true }).extend({
+  title: z.string().min(1),
+  propertyType: z.string().min(1),
+  country: z.string().min(1),
+  city: z.string().min(1),
+  mandateType: z.string().optional(),
+  name: z.string().optional(),
+});
 
 const DealBody = insertDealSchema.omit({ id: true, probability: true }).extend({
   title: z.string().min(1),
   stage: z.string().min(1),
+  nextStep: z.string().optional(),
 });
 
 const TaskBody = insertTaskSchema.omit({ id: true }).extend({
@@ -127,6 +123,7 @@ const DocumentBody = insertDocumentSchema
   .omit({ id: true, uploadedAt: true })
   .extend({
     title: z.string().min(1),
+    filePath: z.string().optional(),
   });
 
 const FinanceBody = insertFinanceRecordSchema.omit({ id: true }).extend({
@@ -141,6 +138,7 @@ const LegalMatterBody = insertLegalMatterSchema.omit({ id: true }).extend({
   matterType: z.string().min(1),
   status: z.string().min(1),
   priority: z.string().min(1),
+  nextAction: z.string().optional(),
 });
 
 const OperatingBody = insertOperatingRecordSchema.omit({ id: true }).extend({
@@ -150,6 +148,8 @@ const OperatingBody = insertOperatingRecordSchema.omit({ id: true }).extend({
   status: z.string().min(1),
   date: z.string().min(1),
   details: z.string().min(1),
+  priority: z.string().optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 });
 
 const CompanyBody = insertCompanySchema.omit({ id: true }).extend({
@@ -160,20 +160,21 @@ const CompanyBody = insertCompanySchema.omit({ id: true }).extend({
 const MeetingBody = insertMeetingSchema.omit({ id: true }).extend({
   title: z.string().min(1),
   meetingType: z.string().min(1),
-  scheduledAt: z.string().min(1),
+  scheduledAt: z.string().transform((val) => new Date(val)),
   durationMinutes: z.number().min(1),
 });
 
 const MandateBody = insertMandateSchema.omit({ id: true }).extend({
   propertyId: z.string().min(1),
+  type: z.string().min(1),
   mandateType: z.string().min(1),
 });
 
 const InvoiceBody = insertInvoiceSchema.omit({ id: true }).extend({
   invoiceNumber: z.string().min(1),
   invoiceType: z.string().min(1),
-  issueDate: z.string().min(1),
-  dueDate: z.string().min(1),
+  issueDate: z.string().optional(),
+  dueDate: z.string().optional(),
   subtotalKes: z.number(),
   totalKes: z.number(),
 });
@@ -294,9 +295,40 @@ const requireAuth: RequestHandler = asyncHandler(async (req, res, next) => {
     return;
   }
 
-  await db
-    .insert(usersTable)
-    .values({
+  // Upsert logic: Try update first, if not found then insert
+  if (!db) {
+    res.status(503).json({
+      error: "Database not configured",
+      message:
+        "DATABASE_URL environment variable is not set. Please add a Supabase integration to enable database operations.",
+      status: "database_unavailable",
+    });
+    return;
+  }
+  const [existingUser] = await db!
+    .select({ id: usersTable.id })
+    .from(usersTable)
+    .where(eq(usersTable.clerkUserId, context.userId))
+    .limit(1);
+
+  if (existingUser) {
+    await db
+      .update(usersTable)
+      .set({
+        email: context.email,
+        firstName: context.name.split(" ")[0] || "",
+        lastName: context.name.split(" ").slice(1).join(" "),
+        fullName: context.name,
+        roleSlug: context.role,
+        isApproved: context.isApproved,
+        canLogin: context.canLogin,
+        isActive: context.isActive,
+        userType: "internal",
+        lastLoginAt: new Date(),
+      })
+      .where(eq(usersTable.clerkUserId, context.userId));
+  } else {
+    await db.insert(usersTable).values({
       id: `user_${context.userId}`,
       clerkUserId: context.userId,
       email: context.email,
@@ -309,32 +341,7 @@ const requireAuth: RequestHandler = asyncHandler(async (req, res, next) => {
       isActive: context.isActive,
       userType: "internal",
       lastLoginAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: usersTable.clerkUserId,
-      set: {
-        email: context.email,
-        firstName: context.name.split(" ")[0] || "",
-        lastName: context.name.split(" ").slice(1).join(" "),
-        fullName: context.name,
-        roleSlug: context.role,
-        isApproved: context.isApproved,
-        canLogin: context.canLogin,
-        isActive: context.isActive,
-        userType: "internal",
-        lastLoginAt: new Date(),
-      })
-      .onConflictDoUpdate({
-        target: usersTable.clerkUserId,
-        set: {
-          email: context.email,
-          firstName: context.name.split(" ")[0],
-          lastName: context.name.split(" ").slice(1).join(" "),
-          fullName: context.name,
-          roleSlug: context.role,
-          lastLoginAt: new Date(),
-        },
-      });
+    });
   }
 
   const updatedContext = await getUserContext(req);
@@ -426,10 +433,10 @@ async function recordActivity(
   module: string,
   impact: string,
 ) {
-  if (!db) return; // Skip if DB not available
+  if (!db) return;
   await db.insert(activityTable).values({
     id: makeId("activity"),
-    timestamp: now(),
+    timestamp: new Date(),
     actor,
     action,
     module,
@@ -443,6 +450,7 @@ async function sendNotification(
   module: string,
   recipient = ADMIN_EMAIL,
 ) {
+  if (!db) return null;
   let status = "queued_email_provider_required";
   let providerResponse =
     "No EMAIL_WEBHOOK_URL configured; notification stored for audit only.";
@@ -464,7 +472,7 @@ async function sendNotification(
     }
   }
 
-  const [notification] = await db
+  const [notification] = await db!
     .insert(notificationsTable)
     .values({
       id: makeId("notification"),
@@ -474,7 +482,7 @@ async function sendNotification(
       module,
       status,
       providerResponse,
-      createdAt: now(),
+      createdAt: new Date(),
     })
     .returning();
 
@@ -500,6 +508,10 @@ router.get(
 router.get(
   "/murivest/command-center",
   asyncHandler(async (_req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const [
       contacts,
       properties,
@@ -509,13 +521,13 @@ router.get(
       operating,
       notifications,
     ] = await Promise.all([
-      db.select().from(contactsTable),
-      db.select().from(propertiesTable),
-      db.select().from(dealsTable),
-      db.select().from(tasksTable),
-      db.select().from(legalMattersTable),
-      db.select().from(operatingRecordsTable),
-      db.select().from(notificationsTable),
+      db!.select().from(contactsTable),
+      db!.select().from(propertiesTable),
+      db!.select().from(dealsTable),
+      db!.select().from(tasksTable),
+      db!.select().from(legalMattersTable),
+      db!.select().from(operatingRecordsTable),
+      db!.select().from(notificationsTable),
     ]);
 
     const pipelineValue = deals.reduce(
@@ -706,7 +718,11 @@ router.get(
   "/murivest/contacts",
   requireRole(["internal_team", "sales", "investor_relations"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(contactsTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(contactsTable));
   }),
 );
 
@@ -735,7 +751,16 @@ router.post(
       accessTier: input.accessTier || "internal",
     });
 
-    const [created] = await db
+    if (!db) {
+      res.status(503).json({
+        error: "Database not configured",
+        message:
+          "DATABASE_URL environment variable is not set. Please add a Supabase integration to enable database operations.",
+        status: "database_unavailable",
+      });
+      return;
+    }
+    const [created] = await db!
       .insert(contactsTable)
       .values({
         ...validated,
@@ -753,8 +778,12 @@ router.patch(
   "/murivest/contacts/:id",
   requireRole(["internal_team", "sales", "investor_relations"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const body = ContactBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(contactsTable)
       .set({ ...body, lastInteraction: today() })
       .where(eq(contactsTable.id, req.params.id))
@@ -768,7 +797,11 @@ router.delete(
   "/murivest/contacts/:id",
   requireRole(["internal_team", "sales", "investor_relations"]),
   asyncHandler(async (req, res) => {
-    const [deleted] = await db
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    const [deleted] = await db!
       .delete(contactsTable)
       .where(eq(contactsTable.id, req.params.id))
       .returning();
@@ -780,7 +813,11 @@ router.delete(
 router.get(
   "/murivest/properties",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(propertiesTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(propertiesTable));
   }),
 );
 
@@ -811,7 +848,7 @@ router.post(
       city: input.city || "Nairobi",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(propertiesTable)
       .values({
         ...validated,
@@ -839,7 +876,7 @@ router.patch(
   asyncHandler(async (req, res) => {
     const body = PropertyBody.partial().parse(req.body);
 
-    const [updated] = await db
+    const [updated] = await db!
       .update(propertiesTable)
       .set({
         ...body,
@@ -863,7 +900,7 @@ router.delete(
   "/murivest/properties/:id",
   requireRole(["internal_team", "property"]),
   asyncHandler(async (req, res) => {
-    const [deleted] = await db
+    const [deleted] = await db!
       .delete(propertiesTable)
       .where(eq(propertiesTable.id, req.params.id))
       .returning();
@@ -875,7 +912,7 @@ router.delete(
 router.get(
   "/murivest/deals",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(dealsTable));
+    res.json(await db!.select().from(dealsTable));
   }),
 );
 
@@ -901,7 +938,7 @@ router.post(
       owner: input.owner || "",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(dealsTable)
       .values({
         ...validated,
@@ -926,7 +963,7 @@ router.patch(
   asyncHandler(async (req, res) => {
     const body = DealBody.partial().parse(req.body);
 
-    const [updated] = await db
+    const [updated] = await db!
       .update(dealsTable)
       .set({
         ...body,
@@ -951,7 +988,7 @@ router.delete(
   "/murivest/deals/:id",
   requireRole(["internal_team", "sales"]),
   asyncHandler(async (req, res) => {
-    const [deleted] = await db
+    const [deleted] = await db!
       .delete(dealsTable)
       .where(eq(dealsTable.id, req.params.id))
       .returning();
@@ -963,7 +1000,7 @@ router.delete(
 router.get(
   "/murivest/tasks",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(tasksTable));
+    res.json(await db!.select().from(tasksTable));
   }),
 );
 
@@ -986,7 +1023,7 @@ router.post(
       dueAt: input.dueDate ? new Date(input.dueDate) : null,
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(tasksTable)
       .values({ ...validated, id: makeId("task") })
       .returning();
@@ -998,7 +1035,7 @@ router.post(
 router.patch(
   "/murivest/tasks/:id",
   asyncHandler(async (req, res) => {
-    const [updated] = await db
+    const [updated] = await db!
       .update(tasksTable)
       .set(TaskBody.partial().parse(req.body))
       .where(eq(tasksTable.id, req.params.id))
@@ -1011,7 +1048,7 @@ router.patch(
 router.delete(
   "/murivest/tasks/:id",
   asyncHandler(async (req, res) => {
-    const [deleted] = await db
+    const [deleted] = await db!
       .delete(tasksTable)
       .where(eq(tasksTable.id, req.params.id))
       .returning();
@@ -1023,7 +1060,7 @@ router.delete(
 router.get(
   "/murivest/documents",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(documentsTable));
+    res.json(await db!.select().from(documentsTable));
   }),
 );
 
@@ -1048,7 +1085,7 @@ router.post(
       agreementStatus: input.agreementStatus || "",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(documentsTable)
       .values({
         ...validated,
@@ -1064,7 +1101,7 @@ router.post(
 router.patch(
   "/murivest/documents/:id",
   asyncHandler(async (req, res) => {
-    const [updated] = await db
+    const [updated] = await db!
       .update(documentsTable)
       .set(DocumentBody.partial().parse(req.body))
       .where(eq(documentsTable.id, req.params.id))
@@ -1077,7 +1114,7 @@ router.patch(
 router.delete(
   "/murivest/documents/:id",
   asyncHandler(async (req, res) => {
-    const [deleted] = await db
+    const [deleted] = await db!
       .delete(documentsTable)
       .where(eq(documentsTable.id, req.params.id))
       .returning();
@@ -1090,7 +1127,7 @@ router.get(
   "/murivest/legal",
   requireRole(["internal_team", "legal"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(legalMattersTable));
+    res.json(await db!.select().from(legalMattersTable));
   }),
 );
 
@@ -1118,7 +1155,7 @@ router.post(
       nextAction: input.nextAction || "",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(legalMattersTable)
       .values({ ...validated, id: makeId("legal") })
       .returning();
@@ -1137,7 +1174,7 @@ router.patch(
   "/murivest/legal/:id",
   requireRole(["internal_team", "legal"]),
   asyncHandler(async (req, res) => {
-    const [updated] = await db
+    const [updated] = await db!
       .update(legalMattersTable)
       .set(LegalMatterBody.partial().parse(req.body))
       .where(eq(legalMattersTable.id, req.params.id))
@@ -1151,7 +1188,7 @@ router.delete(
   "/murivest/legal/:id",
   requireRole(["internal_team", "legal"]),
   asyncHandler(async (req, res) => {
-    const [deleted] = await db
+    const [deleted] = await db!
       .delete(legalMattersTable)
       .where(eq(legalMattersTable.id, req.params.id))
       .returning();
@@ -1164,7 +1201,7 @@ router.get(
   "/murivest/finance",
   requireRole(["finance", "internal_team"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(financeRecordsTable));
+    res.json(await db!.select().from(financeRecordsTable));
   }),
 );
 
@@ -1183,7 +1220,7 @@ router.post(
       owner: input.owner || "",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(financeRecordsTable)
       .values({ ...validated, id: makeId("fin") })
       .returning();
@@ -1196,7 +1233,7 @@ router.patch(
   "/murivest/finance/:id",
   requireRole(["finance", "internal_team"]),
   asyncHandler(async (req, res) => {
-    const [updated] = await db
+    const [updated] = await db!
       .update(financeRecordsTable)
       .set(FinanceBody.partial().parse(req.body))
       .where(eq(financeRecordsTable.id, req.params.id))
@@ -1210,7 +1247,7 @@ router.delete(
   "/murivest/finance/:id",
   requireRole(["finance", "internal_team"]),
   asyncHandler(async (req, res) => {
-    const [deleted] = await db
+    const [deleted] = await db!
       .delete(financeRecordsTable)
       .where(eq(financeRecordsTable.id, req.params.id))
       .returning();
@@ -1267,7 +1304,7 @@ router.post(
           }
         : validated;
 
-    const [created] = await db
+    const [created] = await db!
       .insert(operatingRecordsTable)
       .values({ ...enriched, id: makeId("op") })
       .returning();
@@ -1305,7 +1342,7 @@ router.patch(
       module: req.params.module,
     });
 
-    const [updated] = await db
+    const [updated] = await db!
       .update(operatingRecordsTable)
       .set(body)
       .where(eq(operatingRecordsTable.id, req.params.id))
@@ -1331,7 +1368,7 @@ router.delete(
   asyncHandler(async (req, res) => {
     moduleEnum.parse(req.params.module);
 
-    const [deleted] = await db
+    const [deleted] = await db!
       .delete(operatingRecordsTable)
       .where(eq(operatingRecordsTable.id, req.params.id))
       .returning();
@@ -1343,6 +1380,10 @@ router.delete(
 router.get(
   "/murivest/portal/:portal",
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const portal = portalEnum.parse(req.params.portal);
     const context = (req as AuthedRequest).userContext!;
 
@@ -1353,11 +1394,11 @@ router.get(
 
     const [contacts, properties, deals, documents, records] = await Promise.all(
       [
-        db.select().from(contactsTable),
-        db.select().from(propertiesTable),
-        db.select().from(dealsTable),
-        db.select().from(documentsTable),
-        db.select().from(operatingRecordsTable),
+        db!.select().from(contactsTable),
+        db!.select().from(propertiesTable),
+        db!.select().from(dealsTable),
+        db!.select().from(documentsTable),
+        db!.select().from(operatingRecordsTable),
       ],
     );
 
@@ -1392,7 +1433,11 @@ router.get(
   "/murivest/notifications",
   requireRole(["internal_team", "finance", "legal"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(notificationsTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(notificationsTable));
   }),
 );
 
@@ -1414,7 +1459,11 @@ router.post(
 router.get(
   "/murivest/activity",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(activityTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(activityTable));
   }),
 );
 
@@ -1422,7 +1471,11 @@ router.get(
   "/murivest/users",
   requireRole(["internal_team"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(usersTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(usersTable));
   }),
 );
 
@@ -1472,7 +1525,11 @@ router.get(
 router.get(
   "/murivest/lookup/users",
   asyncHandler(async (_req, res) => {
-    const users = await db.select().from(usersTable);
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    const users = await db!.select().from(usersTable);
     res.json(
       users.map((u) => ({ value: u.fullName, label: u.fullName, id: u.id })),
     );
@@ -1482,7 +1539,11 @@ router.get(
 router.get(
   "/murivest/lookup/properties",
   asyncHandler(async (_req, res) => {
-    const properties = await db.select().from(propertiesTable);
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    const properties = await db!.select().from(propertiesTable);
     res.json(
       properties.map((p) => ({
         value: p.name || p.title,
@@ -1496,6 +1557,10 @@ router.get(
 router.get(
   "/murivest/lookup/companies",
   asyncHandler(async (_req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const companies = await db
       .select()
       .from(contactsTable)
@@ -1514,7 +1579,11 @@ router.get(
 router.get(
   "/murivest/lookup/contacts",
   asyncHandler(async (_req, res) => {
-    const contacts = await db.select().from(contactsTable);
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    const contacts = await db!.select().from(contactsTable);
     res.json(
       contacts.map((c) => ({
         value: c.fullName || c.name,
@@ -1547,7 +1616,11 @@ router.get(
 router.get(
   "/murivest/lookup/pipeline-owners",
   asyncHandler(async (_req, res) => {
-    const users = await db.select().from(usersTable);
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    const users = await db!.select().from(usersTable);
     res.json(users.map((u) => ({ value: u.fullName, label: u.fullName })));
   }),
 );
@@ -1556,6 +1629,10 @@ router.patch(
   "/murivest/admin/users/:userId/approve",
   requireRole(["super_admin"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const { userId } = req.params;
     const { role, isApproved, canLogin, isActive } = req.body;
 
@@ -1569,7 +1646,7 @@ router.patch(
     if (canLogin !== undefined) updateData.canLogin = canLogin;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    const [updated] = await db
+    const [updated] = await db!!
       .update(usersTable)
       .set(updateData)
       .where(eq(usersTable.clerkUserId, userId))
@@ -1583,16 +1660,20 @@ router.patch(
   "/murivest/admin/users/:userId/reject",
   requireRole(["super_admin"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const { userId } = req.params;
     const { reason } = req.body;
 
-    const [targetUser] = await db
+    const [targetUser] = await db!
       .select({ email: usersTable.email })
       .from(usersTable)
       .where(eq(usersTable.clerkUserId, userId))
       .limit(1);
 
-    const [updated] = await db
+    const [updated] = await db!
       .update(usersTable)
       .set({
         isApproved: false,
@@ -1620,15 +1701,19 @@ router.post(
   "/murivest/admin/users/:userId/activate",
   requireRole(["super_admin"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const { userId } = req.params;
 
-    const [targetUser] = await db
+    const [targetUser] = await db!
       .select({ email: usersTable.email })
       .from(usersTable)
       .where(eq(usersTable.clerkUserId, userId))
       .limit(1);
 
-    const [updated] = await db
+    const [updated] = await db!
       .update(usersTable)
       .set({
         isApproved: true,
@@ -1656,9 +1741,13 @@ router.post(
   "/murivest/admin/users/:userId/deactivate",
   requireRole(["super_admin"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const { userId } = req.params;
 
-    const [updated] = await db
+    const [updated] = await db!
       .update(usersTable)
       .set({
         canLogin: false,
@@ -1675,6 +1764,10 @@ router.get(
   "/murivest/admin/pending-users",
   requireRole(["super_admin"]),
   asyncHandler(async (_req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const users = await db
       .select()
       .from(usersTable)
@@ -1688,7 +1781,11 @@ router.get(
   "/murivest/admin/all-users",
   requireRole(["super_admin"]),
   asyncHandler(async (_req, res) => {
-    const users = await db.select().from(usersTable);
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    const users = await db!.select().from(usersTable);
     res.json(users);
   }),
 );
@@ -1698,7 +1795,11 @@ router.get(
   "/murivest/companies",
   requireRole(["internal_team"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(companiesTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(companiesTable));
   }),
 );
 
@@ -1720,7 +1821,7 @@ router.post(
       notes: input.notes || "",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(companiesTable)
       .values({ ...validated, id: makeId("company") })
       .returning();
@@ -1733,8 +1834,12 @@ router.patch(
   "/murivest/companies/:id",
   requireRole(["internal_team"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const body = CompanyBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(companiesTable)
       .set(body)
       .where(eq(companiesTable.id, req.params.id))
@@ -1748,7 +1853,11 @@ router.patch(
 router.get(
   "/murivest/meetings",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(meetingsTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(meetingsTable));
   }),
 );
 
@@ -1770,9 +1879,13 @@ router.post(
       actionItems: input.actionItems || [],
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(meetingsTable)
-      .values({ ...validated, id: makeId("meeting") })
+      .values({
+        ...validated,
+        id: makeId("meeting"),
+        scheduledAt: validated.scheduledAt,
+      })
       .returning();
 
     res.status(201).json(created);
@@ -1783,8 +1896,12 @@ router.patch(
   "/murivest/meetings/:id",
   requireRole(["internal_team"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const body = MeetingBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(meetingsTable)
       .set(body)
       .where(eq(meetingsTable.id, req.params.id))
@@ -1798,7 +1915,11 @@ router.patch(
 router.get(
   "/murivest/mandates",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(mandatesTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(mandatesTable));
   }),
 );
 
@@ -1819,7 +1940,7 @@ router.post(
       feePercent: Number(input.feePercent || 0),
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(mandatesTable)
       .values({ ...validated, id: makeId("mandate") })
       .returning();
@@ -1839,7 +1960,7 @@ router.patch(
   requireRole(["internal_team"]),
   asyncHandler(async (req, res) => {
     const body = MandateBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(mandatesTable)
       .set(body)
       .where(eq(mandatesTable.id, req.params.id))
@@ -1854,7 +1975,11 @@ router.get(
   "/murivest/invoices",
   requireRole(["finance", "internal_team"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(invoicesTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(invoicesTable));
   }),
 );
 
@@ -1881,9 +2006,16 @@ router.post(
       notes: input.notes || "",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(invoicesTable)
-      .values({ ...validated, id: makeId("invoice") })
+      .values({
+        ...validated,
+        id: makeId("invoice"),
+        issueDate: validated.issueDate
+          ? new Date(validated.issueDate)
+          : undefined,
+        dueDate: validated.dueDate ? new Date(validated.dueDate) : undefined,
+      })
       .returning();
 
     res.status(201).json(created);
@@ -1894,10 +2026,18 @@ router.patch(
   "/murivest/invoices/:id",
   requireRole(["finance", "internal_team"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const body = InvoiceBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(invoicesTable)
-      .set(body)
+      .set({
+        ...body,
+        issueDate: body.issueDate ? new Date(body.issueDate) : undefined,
+        dueDate: body.dueDate ? new Date(body.dueDate) : undefined,
+      })
       .where(eq(invoicesTable.id, req.params.id))
       .returning();
 
@@ -1910,7 +2050,11 @@ router.get(
   "/murivest/expenses",
   requireRole(["finance", "internal_team"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(expensesTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(expensesTable));
   }),
 );
 
@@ -1931,7 +2075,7 @@ router.post(
       expenseDate: input.expenseDate || today(),
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(expensesTable)
       .values({ ...validated, id: makeId("expense") })
       .returning();
@@ -1944,8 +2088,12 @@ router.patch(
   "/murivest/expenses/:id",
   requireRole(["finance", "internal_team"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const body = ExpenseBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(expensesTable)
       .set(body)
       .where(eq(expensesTable.id, req.params.id))
@@ -1959,7 +2107,11 @@ router.patch(
 router.get(
   "/murivest/campaigns",
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(campaignsTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(campaignsTable));
   }),
 );
 
@@ -1983,7 +2135,7 @@ router.post(
       endDate: input.endDate || null,
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(campaignsTable)
       .values({ ...validated, id: makeId("campaign") })
       .returning();
@@ -1996,8 +2148,12 @@ router.patch(
   "/murivest/campaigns/:id",
   requireRole(["internal_team"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const body = CampaignBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(campaignsTable)
       .set(body)
       .where(eq(campaignsTable.id, req.params.id))
@@ -2012,7 +2168,11 @@ router.get(
   "/murivest/investors",
   requireRole(["internal_team", "sales", "investor_relations"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(investorsTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(investorsTable));
   }),
 );
 
@@ -2034,7 +2194,7 @@ router.post(
       ndaStatus: input.ndaStatus || "pending",
     });
 
-    const [created] = await db
+    const [created] = await db!
       .insert(investorsTable)
       .values({ ...validated, id: makeId("investor") })
       .returning();
@@ -2054,7 +2214,7 @@ router.patch(
   requireRole(["internal_team", "investor_relations"]),
   asyncHandler(async (req, res) => {
     const body = InvestorBody.partial().parse(req.body);
-    const [updated] = await db
+    const [updated] = await db!
       .update(investorsTable)
       .set(body)
       .where(eq(investorsTable.id, req.params.id))
@@ -2069,7 +2229,11 @@ router.get(
   "/murivest/approvals",
   requireRole(["internal_team"]),
   asyncHandler(async (_req, res) => {
-    res.json(await db.select().from(approvalsTable));
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    res.json(await db!.select().from(approvalsTable));
   }),
 );
 
@@ -2078,7 +2242,7 @@ router.post(
   requireRole(["internal_team"]),
   asyncHandler(async (req, res) => {
     const input = req.body;
-    const [created] = await db
+    const [created] = await db!
       .insert(approvalsTable)
       .values({
         id: makeId("approval"),
@@ -2099,8 +2263,12 @@ router.patch(
   "/murivest/approvals/:id",
   requireRole(["internal_team"]),
   asyncHandler(async (req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const input = req.body;
-    const [updated] = await db
+    const [updated] = await db!
       .update(approvalsTable)
       .set({
         status: input.status,
@@ -2119,7 +2287,11 @@ router.patch(
 router.get(
   "/murivest/lookup/investors",
   asyncHandler(async (_req, res) => {
-    const investors = await db.select().from(investorsTable);
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
+    const investors = await db!.select().from(investorsTable);
     res.json(
       investors.map((i) => ({
         value: i.id,
@@ -2134,6 +2306,10 @@ router.get(
 router.get(
   "/murivest/lookup/meetings-today",
   asyncHandler(async (_req, res) => {
+    if (!db) {
+      res.status(503).json({ error: "Database not configured" });
+      return;
+    }
     const todayStart = new Date();
     todayStart.setHours(0, 0, 0, 0);
     const todayEnd = new Date();
@@ -2143,10 +2319,10 @@ router.get(
       .select()
       .from(meetingsTable)
       .where(
-        require("and")([
-          require(">=")(meetingsTable.scheduledAt, todayStart.toISOString()),
-          require("<=")(meetingsTable.scheduledAt, todayEnd.toISOString()),
-        ]) as any,
+        and(
+          gte(meetingsTable.scheduledAt, todayStart),
+          lte(meetingsTable.scheduledAt, todayEnd),
+        ),
       );
 
     res.json(meetings);
@@ -2154,4 +2330,3 @@ router.get(
 );
 
 export default router;
-

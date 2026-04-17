@@ -1,6 +1,12 @@
 import { getAuth } from "@clerk/express";
-import { Router, type IRouter } from "express";
-import { eq, and, asc } from "drizzle-orm";
+import {
+  Router,
+  type IRouter,
+  type Request,
+  type Response,
+  type NextFunction,
+} from "express";
+import { eq, and, asc, sql } from "drizzle-orm";
 import { z } from "zod/v4";
 import { db } from "@murivest/db";
 import {
@@ -14,9 +20,9 @@ import {
 const router: IRouter = Router();
 
 const requireAuthenticated = (
-  req: Express.Request,
-  res: Express.Response,
-  next: Express.NextFunction,
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
   const { userId } = getAuth(req);
   if (!userId) {
@@ -233,7 +239,7 @@ router.post("/academy/enrollments", async (req, res) => {
         status: input.status,
         progressPercent: input.progressPercent,
         score: input.score,
-        dueDate: input.dueDate,
+        dueDate: input.dueDate ? new Date(input.dueDate) : undefined,
       })
       .onConflictDoUpdate({
         target: [

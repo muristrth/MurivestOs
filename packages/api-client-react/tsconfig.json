@@ -7,7 +7,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "lib": ["dom", "es2022"],
-    "ignoreDeprecations": "6.0"
+    "noEmit": false
   },
   "include": ["src"]
 }

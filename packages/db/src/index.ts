@@ -18,5 +18,6 @@ if (DATABASE_URL) {
   );
 }
 
+export type Db = typeof db;
 export { pool, db };
 export * from "./schema";
