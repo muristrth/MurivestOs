@@ -951,7 +951,7 @@ function AuthFrame({
             <div className="rounded-2xl border border-white/10 bg-white/8 p-4">
               To update login providers, app branding, or OAuth settings use the
               Auth pane in the workspace toolbar. More information can be found
-              in the Replit docs.
+              in the docs.
             </div>
           </div>
         </div>
