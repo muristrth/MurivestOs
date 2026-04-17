@@ -17,6 +17,14 @@ const UploadUrlBody = z.object({
   contentType: z.string().min(1),
 });
 
+type DownloadedObjectResponse = {
+  status: number;
+  headers: {
+    forEach: (callback: (value: string, key: string) => void) => void;
+  };
+  body: ReadableStream<Uint8Array> | null;
+};
+
 const router: IRouter = Router();
 const objectStorageService = new ObjectStorageService();
 
@@ -61,7 +69,10 @@ router.get(
         return;
       }
 
-      const objectResponse = await objectStorageService.downloadObject(file);
+      const objectResponse =
+        (await objectStorageService.downloadObject(
+          file,
+        )) as DownloadedObjectResponse;
 
       res.status(objectResponse.status);
       objectResponse.headers.forEach((value, key) => {
@@ -69,9 +80,7 @@ router.get(
       });
 
       if (objectResponse.body) {
-        Readable.fromWeb(
-          objectResponse.body as ReadableStream<Uint8Array>,
-        ).pipe(res);
+        Readable.fromWeb(objectResponse.body).pipe(res);
       } else {
         res.end();
       }
@@ -92,8 +101,11 @@ router.get(
       const objectFile = await objectStorageService.getObjectEntityFile(
         `/objects/${wildcardPath}`,
       );
+
       const objectResponse =
-        await objectStorageService.downloadObject(objectFile);
+        (await objectStorageService.downloadObject(
+          objectFile,
+        )) as DownloadedObjectResponse;
 
       res.status(objectResponse.status);
       objectResponse.headers.forEach((value, key) => {
@@ -101,9 +113,7 @@ router.get(
       });
 
       if (objectResponse.body) {
-        Readable.fromWeb(
-          objectResponse.body as ReadableStream<Uint8Array>,
-        ).pipe(res);
+        Readable.fromWeb(objectResponse.body).pipe(res);
       } else {
         res.end();
       }
