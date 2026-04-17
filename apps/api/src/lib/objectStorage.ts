@@ -1,5 +1,4 @@
 import { StorageClient } from "@supabase/storage-js";
-import { Readable } from "stream";
 import { randomUUID } from "crypto";
 
 type DownloadObjectResult = {
@@ -19,7 +18,9 @@ function getStorageClient(): StorageClient {
     );
   }
 
-  return new StorageClient(supabaseUrl, supabaseServiceKey || supabaseAnonKey);
+  return new StorageClient(supabaseUrl, {
+    accessToken: supabaseServiceKey || supabaseAnonKey,
+  });
 }
 
 export const objectStorageClient = getStorageClient();
@@ -47,7 +48,7 @@ export class ObjectStorageService {
         "PUBLIC_OBJECT_PREFIX not set. Set PUBLIC_OBJECT_PREFIX env var.",
       );
     }
-    return [`${PUBLIC_OBJECT_PREFIX}`];
+    return [PUBLIC_OBJECT_PREFIX];
   }
 
   getPrivateObjectDir(): string {
@@ -56,29 +57,25 @@ export class ObjectStorageService {
         "PRIVATE_OBJECT_PREFIX not set. Set PRIVATE_OBJECT_PREFIX env var.",
       );
     }
-    return `${PRIVATE_OBJECT_PREFIX}`;
+    return PRIVATE_OBJECT_PREFIX;
   }
 
   async searchPublicObject(
     filePath: string,
   ): Promise<{ id: string; name: string } | null> {
-    for (const prefix of this.getPublicObjectSearchPaths()) {
-      const fullPath = `${prefix}/${filePath}`;
-      const bucket = objectStorageClient.from(SB_BUCKET);
+    const bucket = objectStorageClient.from(SB_BUCKET);
 
-      try {
-        const { data, error } = await bucket.list(fullPath.split("/")[0], {
-          prefix: filePath,
-          limit: 1,
-        });
+    try {
+      const { data, error } = await bucket.list(filePath, {
+        limit: 1,
+      });
 
-        if (error) continue;
-        if (data && data.length > 0) {
-          return { id: data[0].id, name: data[0].name };
-        }
-      } catch {
-        continue;
+      if (error) return null;
+      if (data && data.length > 0) {
+        return { id: data[0].id, name: data[0].name };
       }
+    } catch {
+      return null;
     }
     return null;
   }
@@ -99,10 +96,26 @@ export class ObjectStorageService {
     headers.set("Content-Type", "application/octet-stream");
     headers.set("Cache-Control", `private, max-age=${cacheTtlSec}`);
 
+    const webStream = new ReadableStream({
+      async start(controller) {
+        const reader = data.stream().getReader();
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            controller.enqueue(value);
+          }
+          controller.close();
+        } catch (e) {
+          controller.error(e);
+        }
+      },
+    });
+
     return {
       status: 200,
       headers,
-      body: data as ReadableStream<Uint8Array>,
+      body: webStream,
     };
   }
 
@@ -118,9 +131,7 @@ export class ObjectStorageService {
     const fullPath = `${privateObjectDir}/uploads/${objectId}`;
 
     const bucket = objectStorageClient.from(SB_BUCKET);
-    const { data, error } = bucket.createSignedUploadUrl(fullPath, {
-      expiresIn: 900,
-    });
+    const { data, error } = await bucket.createSignedUploadUrl(fullPath);
 
     if (error) {
       throw new Error(`Failed to create upload URL: ${error.message}`);
@@ -147,8 +158,7 @@ export class ObjectStorageService {
     const fullPath = `${entityDir}/${entityId}`;
 
     const bucket = objectStorageClient.from(SB_BUCKET);
-    const { data, error } = await bucket.list("", {
-      prefix: fullPath,
+    const { data, error } = await bucket.list(fullPath, {
       limit: 1,
     });
 
@@ -188,11 +198,9 @@ export class ObjectStorageService {
 
   async canAccessObjectEntity({
     userId,
-    objectFile,
-    _requestedPermission,
   }: {
     userId?: string;
-    objectFile: unknown;
+    objectFile?: unknown;
     requestedPermission?: unknown;
   }): Promise<boolean> {
     if (!userId) return false;
@@ -214,15 +222,16 @@ export async function signObjectURL({
   const bucket = objectStorageClient.from(bucketName);
 
   const expiresIn = ttlSec;
-  const options =
-    method === "PUT" ? { method: "POST" as const } : { download: objectName };
 
-  const { data, error } = bucket.createSignedUrl(
-    objectName,
-    expiresIn,
-    options,
-  );
+  if (method === "PUT") {
+    const { data, error } = await bucket.createSignedUploadUrl(objectName);
+    if (error) {
+      throw new Error(`Failed to sign URL: ${error.message}`);
+    }
+    return data?.signedUrl || "";
+  }
 
+  const { data, error } = await bucket.createSignedUrl(objectName, expiresIn);
   if (error) {
     throw new Error(`Failed to sign URL: ${error.message}`);
   }
