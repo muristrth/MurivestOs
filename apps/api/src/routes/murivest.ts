@@ -456,24 +456,24 @@ async function sendNotification(
     "No EMAIL_WEBHOOK_URL configured; notification stored for audit only.";
 
   if (process.env.EMAIL_WEBHOOK_URL) {
-    try {
-      const webhookResponse: globalThis.Response = await fetch(
-        process.env.EMAIL_WEBHOOK_URL,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ to: recipient, subject, message, module }),
-        },
-      );
+  try {
+    const webhookResponse = (await fetch(process.env.EMAIL_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ to: recipient, subject, message, module }),
+    })) as {
+      ok: boolean;
+      text(): Promise<string>;
+    };
 
-      status = webhookResponse.ok ? "sent" : "provider_error";
-      providerResponse = await webhookResponse.text();
-    } catch (error) {
-      status = "provider_error";
-      providerResponse =
-        error instanceof Error ? error.message : "Unknown webhook error";
-    }
+    status = webhookResponse.ok ? "sent" : "provider_error";
+    providerResponse = await webhookResponse.text();
+  } catch (error) {
+    status = "provider_error";
+    providerResponse =
+      error instanceof Error ? error.message : "Unknown webhook error";
   }
+}
 
   const [notification] = await db!
     .insert(notificationsTable)
