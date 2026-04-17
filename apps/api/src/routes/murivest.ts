@@ -43,7 +43,7 @@ import {
 
 const router: IRouter = Router();
 
-const ADMIN_EMAIL = "murivestrealty@gmail.com";
+const ADMIN_EMAIL = "investments@murivest.co.ke";
 const today = () => new Date().toISOString().slice(0, 10);
 const now = () => new Date().toISOString();
 const makeId = (prefix: string) =>
@@ -457,14 +457,17 @@ async function sendNotification(
 
   if (process.env.EMAIL_WEBHOOK_URL) {
     try {
-      const response = await fetch(process.env.EMAIL_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ to: recipient, subject, message, module }),
-      });
+      const webhookResponse: globalThis.Response = await fetch(
+        process.env.EMAIL_WEBHOOK_URL,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ to: recipient, subject, message, module }),
+        },
+      );
 
-      status = response.ok ? "sent" : "provider_error";
-      providerResponse = await response.text();
+      status = webhookResponse.ok ? "sent" : "provider_error";
+      providerResponse = await webhookResponse.text();
     } catch (error) {
       status = "provider_error";
       providerResponse =
@@ -1487,7 +1490,7 @@ router.get(
         id: "int_email",
         service: "Transactional email",
         domain:
-          "Approvals, deal updates and mandate actions to murivestrealty@gmail.com",
+          "Approvals, deal updates and mandate actions to investments@murivest.co.ke",
         status: process.env.EMAIL_WEBHOOK_URL
           ? "ready"
           : "queued_provider_required",
@@ -1646,7 +1649,7 @@ router.patch(
     if (canLogin !== undefined) updateData.canLogin = canLogin;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    const [updated] = await db!!
+    const [updated] = await db!
       .update(usersTable)
       .set(updateData)
       .where(eq(usersTable.clerkUserId, userId))
@@ -1930,6 +1933,7 @@ router.post(
     const input = req.body;
     const validated = MandateBody.parse({
       propertyId: input.propertyId || "",
+      type: input.type || "listing",
       mandateType: input.mandateType || "exclusive",
       status: input.status || "draft",
       startDate: input.startDate || null,

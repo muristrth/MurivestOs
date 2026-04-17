@@ -97,7 +97,7 @@ function requireRole(roles: string[]): RequestHandler {
 ### How Super Admin Access Works
 
 1. **Super Admin determination in Clerk:**
-   - `murivestrealty@gmail.com` email → auto-granted "super_admin" role
+   - `investments@murivest.co.ke` email → auto-granted "super_admin" role
    - OR set `publicMetadata.role = "super_admin"` in Clerk dashboard
 
 2. **Super Admin privileges in murivest.ts:**
@@ -325,7 +325,7 @@ ADD COLUMN IF NOT EXISTS approved_by_user_id text;
 -- Update existing admin to approved
 UPDATE murivest_users
 SET is_approved = true, approved_at = now()
-WHERE email = 'murivestrealty@gmail.com';
+WHERE email = 'investments@murivest.co.ke';
 ```
 
 ### Phase 2: Update Code (murivest.ts)

@@ -982,7 +982,7 @@ function HomePage() {
                 Login as admin to key in previous work, update logs, pipeline
                 deals, properties and authority-to-sell approvals, manage
                 departments, upload agreements and track notifications to
-                murivestrealty@gmail.com.
+                investments@murivest.co.ke.
               </p>
               <div className="mt-8 flex flex-wrap gap-3">
                 <Link
@@ -1658,7 +1658,7 @@ function CommandCenterPage() {
         <SectionTitle
           eyebrow="Notifications"
           title="Email notification audit trail"
-          note="Approval, mandate and deal actions are recorded for murivestrealty@gmail.com. If an email provider webhook is configured, the status changes from queued to sent."
+          note="Approval, mandate and deal actions are recorded for investments@murivest.co.ke. If an email provider webhook is configured, the status changes from queued to sent."
         />
         <EditableTable
           rows={
