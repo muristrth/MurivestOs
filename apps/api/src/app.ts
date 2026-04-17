@@ -1,8 +1,11 @@
 import { clerkMiddleware, createClerkClient } from "@clerk/express";
 import express, { type Express } from "express";
 import cors from "cors";
-import { pinoHttp } from 'pino-http';
-import { clerkProxyMiddleware } from './middlewares/clerkProxyMiddleware.js'
+import { pinoHttp } from "pino-http";
+import {
+  clerkProxyMiddleware,
+  CLERK_PROXY_PATH,
+} from "./middlewares/clerkProxyMiddleware.js";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
