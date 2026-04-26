@@ -1,0 +1,19 @@
+{
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "apps/web/dist/public",
+  "functions": {
+    "apps/api/dist/index.mjs": {
+      "runtime": "nodejs22.x"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/apps/api/dist/index.mjs"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/apps/web/dist/public/$1"
+    }
+  ]
+}
