@@ -32,7 +32,21 @@ const requireAuthenticated = (
   next();
 };
 
+const requireDb = (_req: Request, res: Response, next: NextFunction) => {
+  if (!db) {
+    res.status(503).json({
+      error: "Database not configured",
+      message:
+        "DATABASE_URL environment variable is not set. Please configure a database connection to enable academy operations.",
+      status: "database_unavailable",
+    });
+    return;
+  }
+  next();
+};
+
 router.use(requireAuthenticated);
+router.use(requireDb);
 
 const CourseBody = z.object({
   title: z.string().min(1),
