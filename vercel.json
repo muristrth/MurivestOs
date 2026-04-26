@@ -1,6 +1,4 @@
 {
-  "buildCommand": "pnpm run build",
-  "outputDirectory": "apps/web/dist/public",
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -10,5 +8,9 @@
       "source": "/(.*)",
       "destination": "/apps/web/dist/public/$1"
     }
-  ]
+  ],
+
+  "buildCommand": "pnpm run build",
+  "outputDirectory": "dist",
+  "framework": "vite"
 }
