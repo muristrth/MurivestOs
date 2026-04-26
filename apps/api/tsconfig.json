@@ -6,7 +6,8 @@
     "noEmitOnError": false,
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    "ignoreDeprecations": "5.0"
   },
   "include": ["src"],
   "references": [
