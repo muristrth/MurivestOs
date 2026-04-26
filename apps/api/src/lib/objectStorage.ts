@@ -7,15 +7,16 @@ type DownloadObjectResult = {
   body: ReadableStream<Uint8Array> | null;
 };
 
-function getStorageClient(): StorageClient {
+function getStorageClient(): StorageClient | null {
   const supabaseUrl = process.env.SUPABASE_URL;
   const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    throw new Error(
-      "SUPABASE_URL and SUPABASE_ANON_KEY must be set for Supabase Storage",
+    console.warn(
+      "[Murivest Storage] SUPABASE_URL and SUPABASE_ANON_KEY not set - storage operations will be unavailable.",
     );
+    return null;
   }
 
   return new StorageClient(supabaseUrl, {
@@ -37,6 +38,15 @@ export class ObjectNotFoundError extends Error {
     this.name = "ObjectNotFoundError";
     Object.setPrototypeOf(this, ObjectNotFoundError.prototype);
   }
+}
+
+function requireStorageClient(): StorageClient {
+  if (!objectStorageClient) {
+    throw new Error(
+      "Storage is not configured. Set SUPABASE_URL and SUPABASE_ANON_KEY environment variables.",
+    );
+  }
+  return objectStorageClient;
 }
 
 export class ObjectStorageService {
@@ -63,7 +73,7 @@ export class ObjectStorageService {
   async searchPublicObject(
     filePath: string,
   ): Promise<{ id: string; name: string } | null> {
-    const bucket = objectStorageClient.from(SB_BUCKET);
+    const bucket = requireStorageClient().from(SB_BUCKET);
 
     try {
       const { data, error } = await bucket.list(filePath, {
@@ -84,7 +94,7 @@ export class ObjectStorageService {
     file: { id: string; name: string },
     cacheTtlSec: number = 3600,
   ): Promise<DownloadObjectResult> {
-    const bucket = objectStorageClient.from(SB_BUCKET);
+    const bucket = requireStorageClient().from(SB_BUCKET);
 
     const { data, error } = await bucket.download(file.name);
 
@@ -130,7 +140,7 @@ export class ObjectStorageService {
     const objectId = randomUUID();
     const fullPath = `${privateObjectDir}/uploads/${objectId}`;
 
-    const bucket = objectStorageClient.from(SB_BUCKET);
+    const bucket = requireStorageClient().from(SB_BUCKET);
     const { data, error } = await bucket.createSignedUploadUrl(fullPath);
 
     if (error) {
@@ -157,7 +167,7 @@ export class ObjectStorageService {
     const entityDir = this.getPrivateObjectDir();
     const fullPath = `${entityDir}/${entityId}`;
 
-    const bucket = objectStorageClient.from(SB_BUCKET);
+    const bucket = requireStorageClient().from(SB_BUCKET);
     const { data, error } = await bucket.list(fullPath, {
       limit: 1,
     });
@@ -219,7 +229,7 @@ export async function signObjectURL({
   method: "GET" | "PUT" | "DELETE" | "HEAD";
   ttlSec: number;
 }): Promise<string> {
-  const bucket = objectStorageClient.from(bucketName);
+  const bucket = requireStorageClient().from(bucketName);
 
   const expiresIn = ttlSec;
 
